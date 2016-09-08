@@ -11,8 +11,11 @@ namespace ConsoleApplication.Functions
 {
     public static class SocketChat
     {
+        public static TcpListener Listener;
+        
         public static void Begin(CancellationToken ct) 
         {
+            Console.Clear();
             C.WL(@"
              _____            __        __  ________          __ 
             / ___/____  _____/ /_____  / /_/ ____/ /_  ____ _/ /_
@@ -51,14 +54,14 @@ namespace ConsoleApplication.Functions
 
             public async static Task ServerStartAsync(CancellationToken ct)
             {
-                TcpListener Listener = new TcpListener(IPAddress.Any, U.GlobalPort);
+                Listener = new TcpListener(IPAddress.Any, U.GlobalPort);
                 try{Listener.Start();}
                 catch(Exception e){C.WL(e.Message); StopRestart(); return;}
                 C.WL($"GlobalServer Started at: {Listener.Server.LocalEndPoint}");
                 try{
                     var t = AcceptClientsAsync(Listener);
                     var t1 = ClientBroadCastAsync();
-                    var t2 = ServerBroadCastAsync(GenerateUsername(), ct); // not waited to avoid blocking
+                    var t2 = ServerBroadCastAsync(GenerateUsername(), ct); // Parallel to avoid blocking
                     Task.WaitAll(new []{t,t1});
                 }catch(Exception e){C.WL(e.Message); StopRestart(); return;}
             }
@@ -119,6 +122,7 @@ namespace ConsoleApplication.Functions
                 return Task.Factory.StartNew(()=>{
                     while(true){
                         if(C.Key().Key == ConsoleKey.Enter)C.Write(serverUsername);
+                        else continue;
                         var message = C.Read();
                         var b = Encoding.UTF8.GetBytes(serverUsername+message);
                         foreach(var client in Clients)
@@ -133,12 +137,12 @@ namespace ConsoleApplication.Functions
         {
             public async static Task ServerStartAsync(CancellationToken ct)
             {
-                TcpListener listener = new TcpListener(IPAddress.Any, U.PrivatePort);
-                try{listener.Start();}
+                Listener= new TcpListener(IPAddress.Any, U.PrivatePort);
+                try{Listener.Start();}
                 catch(Exception e){C.WL(e.Message); StopRestart(); return;}
-                C.WL($"PrivateServer Started at: {listener.Server.LocalEndPoint}");
+                C.WL($"PrivateServer Started at: {Listener.Server.LocalEndPoint}");
                 TcpClient client;
-                try{client = await listener.AcceptTcpClientAsync();}
+                try{client = await Listener.AcceptTcpClientAsync();}
                 catch(Exception e){C.WL(e.Message);StopRestart();return;}
                 C.WL("Client Connected");
                 try{
@@ -159,6 +163,7 @@ namespace ConsoleApplication.Functions
             return Task.Factory.StartNew(()=>{
                 while(true){
                     if(C.Key().Key == ConsoleKey.Enter)C.Write(username);
+                    else continue;
                     var m = Encoding.UTF8.GetBytes(message??(username != null ? username+C.Read() : C.Read()));
                     client.GetStream().WriteAsync(m,0,m.Length);
                 }
@@ -180,10 +185,12 @@ namespace ConsoleApplication.Functions
         private static string GenerateUsername()
         {
             C.WL("Type Username or Press Enter To Generate...");
-            char repeat = '='; string end = ">_"; // =======>_
-            var input = C.Read();
-            return input.Length > 0 ? input.PadRight(U.NameLength,repeat)+end
-                                    : (Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
+            char repeat = '_'; string end = "> "; // username______> 
+            var username = C.Read();
+            C.WL("Press Enter Before To Write Something...");
+            return username.Length > 0 
+                ? username.PadRight(U.NameLength,repeat)+end
+                : (Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
         }
 
         private static void DisplayRemoteMessage(string message,Tuple<ConsoleColor,ConsoleColor> colorSet)
@@ -196,7 +203,9 @@ namespace ConsoleApplication.Functions
 
         private async static void StopRestart()
         {
-            C.Read();await Program.MainAsync(new string[0]);
+            Listener.Stop();
+            C.Read();
+            await Program.MainAsync(new string[0]);
         }
 
         //Not Working On OS X

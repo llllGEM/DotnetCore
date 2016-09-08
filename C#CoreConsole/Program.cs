@@ -7,14 +7,14 @@ namespace ConsoleApplication
 {       
     public class Program
     {
-        static ManualResetEvent resetEvent = new ManualResetEvent(false);
+        public static ManualResetEvent GlobalResetEvent = new ManualResetEvent(false);
         public static CancellationTokenSource cts;
 
         public static void Main(string[] args)
         {
             ConsoleInit();
             Task.Factory.StartNew(async() => await MainAsync(args), cts.Token).Wait();
-            //resetEvent.WaitOne();
+            //GlobalResetEvent.WaitOne();
         }
 
         public static async Task MainAsync(string[] args) 
@@ -50,8 +50,8 @@ namespace ConsoleApplication
             Console.Beep();
             cts = new CancellationTokenSource();
             Task.Factory.StartNew(() => {
-                string bar = "Arretez de regarder le titre bande de cons";
-                string[] icon = new string[4]{"| ", "/ ", "--", "\\ "};
+                //string bar = "Arretez de regarder le titre bande de cons";
+                //string[] icon = new string[4]{"| ", "/ ", "--", "\\ "};
                 string[] dots = new string[4]{".   ", "..  ", "... ", "...."};
                 string title = "";
                 while (true){
@@ -66,6 +66,7 @@ namespace ConsoleApplication
             }}, cts.Token);
             Console.CancelKeyPress += (sender, e) => {
                 //e.Cancel = true; 
+                SocketChat.Listener?.Stop(); // stop listener if socketChat launched in case of control + C
                 EndTasks();
                 C.WL($"CTRL+C detected! Check the title\n");
                 Console.Title = "Stopped by User";
