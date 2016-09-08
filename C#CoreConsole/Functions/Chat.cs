@@ -9,24 +9,58 @@ using System.Threading.Tasks;
 
 namespace ConsoleApplication.Functions
 {
-    public static class Chat
+    public static class SocketChat
     {
+        public static void Begin(CancellationToken ct) 
+        {
+            C.WL(@"
+             _____            __        __  ________          __ 
+            / ___/____  _____/ /_____  / /_/ ____/ /_  ____ _/ /_
+            \__ \/ __ \/ ___/ //_/ _ \/ __/ /   / __ \/ __ `/ __/
+           ___/ / /_/ / /__/ ,< /  __/ /_/ /___/ / / / /_/ / /_  
+          /____/\____/\___/_/|_|\___/\__/\____/_/ /_/\__,_/\__/  
+                                                       ");
+            C.Display("1: Public \t 2: Private");
+            var keyChar = C.Key().KeyChar;
+            if(keyChar == '&'){
+                C.Display("1: Server \t 2: Client");
+                var kc = C.Key().KeyChar;
+                C.Cursor(0, Console.CursorTop);
+                if(kc == '&'){
+                    Public.ServerStartAsync(ct).Wait();
+                }
+                else if (kc == 'é'){
+                    Public.ClientConnectAsync(ct).Wait();
+                }
+            }
+            else if (keyChar == 'é'){
+                C.Display("1: Server \t 2: Client");
+                var kc = C.Key().KeyChar;
+                C.Cursor(0, Console.CursorTop);
+                if(kc == '&'){
+                    Private.ServerStartAsync(ct).Wait();
+                }
+                else if (kc == 'é'){
+                    Public.ClientConnectAsync(ct, U.PrivatePort).Wait();
+                }
+            }
+        }
         public static class Public
         {
             private static ObservableCollection<TcpClient> Clients = new ObservableCollection<TcpClient>();
 
-            public async static Task ServerStartAsync()
+            public async static Task ServerStartAsync(CancellationToken ct)
             {
                 TcpListener Listener = new TcpListener(IPAddress.Any, U.GlobalPort);
                 try{Listener.Start();}
-                catch(Exception e){C.Display(e.Message); StopRestart(); return;}
-                C.Display($"GlobalServer Started at: {Listener.Server.LocalEndPoint}");
+                catch(Exception e){C.WL(e.Message); StopRestart(); return;}
+                C.WL($"GlobalServer Started at: {Listener.Server.LocalEndPoint}");
                 try{
                     var t = AcceptClientsAsync(Listener);
                     var t1 = ClientBroadCastAsync();
-                    var t2 = ServerBroadCastAsync(GenerateUsername());
+                    var t2 = ServerBroadCastAsync(GenerateUsername(), ct); // not waited to avoid blocking
                     Task.WaitAll(new []{t,t1});
-                }catch(Exception e){C.Display(e.Message); StopRestart(); return;}
+                }catch(Exception e){C.WL(e.Message); StopRestart(); return;}
             }
 
             public async static Task ClientConnectAsync(CancellationToken ct, int? port = null)
@@ -35,8 +69,8 @@ namespace ConsoleApplication.Functions
                 try{
                     Tcp = new TcpClient(AddressFamily.InterNetwork);
                     await Tcp.ConnectAsync(IPAddress.Any, port??U.GlobalPort);
-                }catch(Exception e){C.Display(e.Message);StopRestart();return;}
-                C.Display($"You are Now Connected to: {Tcp.Client.RemoteEndPoint}");
+                }catch(Exception e){C.WL(e.Message);StopRestart();return;}
+                C.WL($"You are Now Connected to: {Tcp.Client.RemoteEndPoint}");
                 try{
                     if(Tcp.Client.Connected)
                     {
@@ -44,7 +78,7 @@ namespace ConsoleApplication.Functions
                         var TRead = ReceiveAsync(Tcp, ct);
                         Task.WaitAll(new []{TWrite, TRead});
                     }
-                }catch(Exception e){C.Display(e.Message);StopRestart();return;}
+                }catch(Exception e){C.WL(e.Message);StopRestart();return;}
             }
 
             private async static Task AcceptClientsAsync(TcpListener listener)
@@ -52,8 +86,8 @@ namespace ConsoleApplication.Functions
                 while(true){
                     TcpClient client;
                     try{client = await listener.AcceptTcpClientAsync();}
-                    catch(Exception e){C.Display(e.Message);StopRestart();return;}
-                    C.Display("New Client Connected ");
+                    catch(Exception e){C.WL(e.Message);StopRestart();return;}
+                    C.WL("New Client Connected ");
                     Clients.Add(client);
                 }
             }
@@ -80,7 +114,7 @@ namespace ConsoleApplication.Functions
                 }
             }
 
-            private static Task ServerBroadCastAsync(string serverUsername)
+            private static Task ServerBroadCastAsync(string serverUsername, CancellationToken ct)
             {   
                 return Task.Factory.StartNew(()=>{
                     while(true){
@@ -90,7 +124,7 @@ namespace ConsoleApplication.Functions
                         foreach(var client in Clients)
                         client.GetStream().WriteAsync(b, 0, b.Length);
                     }
-                });
+                }, ct);
             }
             
         }
@@ -101,20 +135,20 @@ namespace ConsoleApplication.Functions
             {
                 TcpListener listener = new TcpListener(IPAddress.Any, U.PrivatePort);
                 try{listener.Start();}
-                catch(Exception e){C.Display(e.Message); StopRestart(); return;}
-                C.Display($"PrivateServer Started at: {listener.Server.LocalEndPoint}");
+                catch(Exception e){C.WL(e.Message); StopRestart(); return;}
+                C.WL($"PrivateServer Started at: {listener.Server.LocalEndPoint}");
                 TcpClient client;
                 try{client = await listener.AcceptTcpClientAsync();}
-                catch(Exception e){C.Display(e.Message);StopRestart();return;}
-                C.Display("Client Connected");
+                catch(Exception e){C.WL(e.Message);StopRestart();return;}
+                C.WL("Client Connected");
                 try{
                     if(client.Connected)
                     {
-                        var TWrite = SendAsync(client, ct, GenerateUsername());
                         var TRead = ReceiveAsync(client, ct);
-                        Task.WaitAll(new []{TWrite, TRead});
+                        var TWrite = SendAsync(client, ct, GenerateUsername());
+                        Task.WaitAll(new []{TRead, TWrite});
                     }
-                }catch(Exception e){C.Display(e.Message);StopRestart();return;}
+                }catch(Exception e){C.WL(e.Message);StopRestart();return;}
             }
 
         }
@@ -145,7 +179,7 @@ namespace ConsoleApplication.Functions
 
         private static string GenerateUsername()
         {
-            C.Display("Type Username or Press Enter To Generate...");
+            C.WL("Type Username or Press Enter To Generate...");
             char repeat = '='; string end = ">_"; // =======>_
             var input = C.Read();
             return input.Length > 0 ? input.PadRight(U.NameLength,repeat)+end
@@ -156,7 +190,7 @@ namespace ConsoleApplication.Functions
         {
             Console.BackgroundColor = colorSet.Item1;
             Console.ForegroundColor = colorSet.Item2;
-            C.Display(message);
+            C.WL(message);
             Console.ResetColor();
         }
 

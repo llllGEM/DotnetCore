@@ -13,7 +13,7 @@ namespace ConsoleApplication
         public static void Main(string[] args)
         {
             ConsoleInit();
-            Task.Factory.StartNew(async() => await MainAsync(args)).Wait();
+            Task.Factory.StartNew(async() => await MainAsync(args), cts.Token).Wait();
             //resetEvent.WaitOne();
         }
 
@@ -21,20 +21,13 @@ namespace ConsoleApplication
         {
             try{
                 int nb;
-                C.Display("Choose program:\n 1: Randomizer \n 2: GlobalChatServer \n 3: GlobalChatClient ");
-                C.Display(" 4: PrivateChatServer \n 5: PrivateChatClient");    
+                C.WL("Choose program:\n\n 1: Randomizer \n\n 2: SocketChat");   
                 if(!U.ParseInt(C.Read(), out nb)) {await MainAsync(args);EndTasks();}
                 else
                 switch(nb){
-                        case 1: Randomizer.Randomize(cts.Token);
+                        case 1: Randomizer.Randomize();
                                 break;
-                        case 2: Chat.Public.ServerStartAsync().Wait();
-                                break;
-                        case 3: Chat.Public.ClientConnectAsync(cts.Token).Wait();
-                                break;
-                        case 4: Chat.Private.ServerStartAsync(cts.Token).Wait();
-                                break;
-                        case 5: Chat.Public.ClientConnectAsync(cts.Token, U.PrivatePort).Wait();
+                        case 2: SocketChat.Begin(cts.Token);
                                 break;
                         default: Console.Clear();
                                  break;
@@ -45,6 +38,14 @@ namespace ConsoleApplication
         }
         
         public static void ConsoleInit(){
+            ProgressBar();
+            C.WL(@"
+ ██████╗ ██╗ ██╗  ██████╗ ██████╗ ██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗███████╗ ██████╗ ██╗     ███████╗
+██╔════╝████████╗██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║██╔════╝██╔═══██╗██║     ██╔════╝
+██║     ╚██╔═██╔╝██║     ██║   ██║██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║███████╗██║   ██║██║     █████╗  
+██║     ████████╗██║     ██║   ██║██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║╚════██║██║   ██║██║     ██╔══╝  
+╚██████╗╚██╔═██╔╝╚██████╗╚██████╔╝██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║███████║╚██████╔╝███████╗███████╗
+ ╚═════╝ ╚═╝ ╚═╝  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚══════╝╚══════╝");
             //Console.TreatControlCAsInput = true; //to suppress ctrl + C...
             Console.Beep();
             cts = new CancellationTokenSource();
@@ -66,17 +67,9 @@ namespace ConsoleApplication
             Console.CancelKeyPress += (sender, e) => {
                 //e.Cancel = true; 
                 EndTasks();
-                C.Display($"CTRL+C detected! Check the title\n");
+                C.WL($"CTRL+C detected! Check the title\n");
                 Console.Title = "Stopped by User";
             };
-            ProgressBar();
-            C.Display(@"
- ██████╗ ██╗ ██╗  ██████╗ ██████╗ ██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗███████╗ ██████╗ ██╗     ███████╗
-██╔════╝████████╗██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║██╔════╝██╔═══██╗██║     ██╔════╝
-██║     ╚██╔═██╔╝██║     ██║   ██║██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║███████╗██║   ██║██║     █████╗  
-██║     ████████╗██║     ██║   ██║██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║╚════██║██║   ██║██║     ██╔══╝  
-╚██████╗╚██╔═██╔╝╚██████╗╚██████╔╝██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║███████║╚██████╔╝███████╗███████╗
- ╚═════╝ ╚═╝ ╚═╝  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚══════╝╚══════╝");
         }
         
         public static void ProgressBar(bool clear = true, ConsoleColor color = ConsoleColor.Green, string text = "")
