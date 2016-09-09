@@ -20,31 +20,33 @@ namespace ConsoleApplication.Functions.Chat
                         .FirstOrDefault()
                         .Username = usernames.FirstOrDefault();//store username 
             var m = message.ToLower();
-            if(m.Contains("target") 
-            || m.Contains("-t"))
+            if(m.Contains("target") || m.Contains("-t"))
             {
-                SendTargetMessage(usernames,message,regex);
+                SendToTarget(usernames,message,regex);
             }
-            else if(m.Contains("file")
-                 || m.Contains("-f"))
+            else if(m.Contains("file") || m.Contains("-f"))
             {
                 //TODO handle file transfer
             }
-            // else if(m.Contains("wizz") // only for windows users
-            //     || m.Contains("-w"))
-            // {     
-            //     Wizz(message, regex);
-            // }
+            else if(m.Contains("wizz") || m.Contains("-w"))
+            {     
+                Wizz(message, regex);
+            }
             else{
-                DisplayRemoteMessage(message);
-                foreach(var user in SocketChat.Public.Users.Where(c => c.Client != sender)){ // transmit message to everyone exept sender
-                    var bytes = Encoding.UTF8.GetBytes(message);
-                    await user.Client.GetStream().WriteAsync(bytes, 0, bytes.Length);
-                }
+                await Send(sender, message);
             }
         }
 
-        private static void SendTargetMessage(List<string> usernames,string message, string regex)
+        private async static Task Send(TcpClient sender, string message)
+        {
+            DisplayRemoteMessage(message);
+            foreach(var user in SocketChat.Public.Users.Where(c => c.Client != sender)){ // transmit message to everyone exept sender
+                var bytes = Encoding.UTF8.GetBytes(message);
+                await user.Client.GetStream().WriteAsync(bytes, 0, bytes.Length);
+            }
+        }
+
+        private static void SendToTarget(List<string> usernames,string message, string regex)
         {
             var toTrim = new char[3]{'<','_','>'};
             usernames.Remove(usernames.FirstOrDefault()); // everyone exept sender
@@ -58,14 +60,14 @@ namespace ConsoleApplication.Functions.Chat
                         message ="";
                         foreach(string s in tab.ToList())// ToList Mandatory to avoid collectionChangedException
                         {
+                            if(s.ToLower().Trim() == "-t"|| s.ToLower().Trim() == "target"){ //optional maybe usefule to notice its private message
+                                tab.Remove(s);
+                                continue;
+                            }
                             if(s == username){
                                 tab.Remove(s);
                                 continue;
                             } 
-                            if(s.ToLower() == "-t"|| s.ToLower() == "target"){ //optional maybe usefule to notice its private message
-                                tab.Remove(s);
-                                continue;
-                            }
                             message += s;
                         }
                         targetsList.Add(user);
@@ -87,7 +89,7 @@ namespace ConsoleApplication.Functions.Chat
             message ="";
             foreach(string s in tab.ToList())
             {
-                if(s.ToLower() == "-w" || s.ToLower() == "wizz" ){
+                if(s.ToLower().Trim() == "-w" || s.ToLower().Trim() == "wizz" ){
                     tab.Remove(s);
                     continue;
                 }
