@@ -53,7 +53,11 @@ namespace ConsoleApplication.Functions.Chat
 
         public static class Public
         {
-            public static ObservableCollection<SocketUser> Users = new ObservableCollection<SocketUser>();
+            public static bool SeeEverything {get;set;} = false;
+
+            public static ObservableCollection<SocketUser> Users {get; set;} = new ObservableCollection<SocketUser>();
+
+            public static List<string> History {get;set;} = new List<string>();
 
             public async static Task ServerStartAsync(CancellationToken ct)
             {
@@ -61,6 +65,7 @@ namespace ConsoleApplication.Functions.Chat
                 try{Listener.Start();}
                 catch(Exception e){C.WL(e.Message); StopRestart(); return;}
                 C.WL($"GlobalServer Started at: {Listener.Server.LocalEndPoint}");
+                AskPrivacy();
                 try{
                     var t = AcceptClientsAsync(Listener);
                     var t1 = ClientBroadCastAsync();
@@ -126,6 +131,7 @@ namespace ConsoleApplication.Functions.Chat
                         var b = Encoding.UTF8.GetBytes(serverUsername+message);
                         foreach(var user in Users)
                         user.Client.GetStream().WriteAsync(b, 0, b.Length);
+                        History.Add(message);
                     }
                 }, ct);
             }
@@ -192,6 +198,7 @@ namespace ConsoleApplication.Functions.Chat
             }, ct);
         }
 
+
         private static string GenerateUsername()
         {
             C.WL("Type Username or Press Enter To Generate...");
@@ -199,8 +206,14 @@ namespace ConsoleApplication.Functions.Chat
             var username = C.Read();
             C.WL("Press Enter Before To Write Something...");
             return username.Length > 0 
-                ? start+username.PadRight(U.NameLength,repeat)+end
-                : start+(Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
+                 ? start+username.PadRight(U.NameLength,repeat)+end
+                 : start+(Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
+        }
+
+        private static void AskPrivacy()
+        {
+            C.WL("See Every Message ? y/n");
+            if(C.Key().Key ==ConsoleKey.Y) Public.SeeEverything = true;
         }
 
         private async static void StopRestart()
@@ -215,8 +228,8 @@ namespace ConsoleApplication.Functions.Chat
         {
             IPHostEntry host = await Dns.GetHostEntryAsync(Dns.GetHostName());
             return host
-                .AddressList
-                .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+                   .AddressList
+                   .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
         }
 
         #endregion Private Functions

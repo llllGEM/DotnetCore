@@ -13,16 +13,21 @@ namespace ConsoleApplication.Functions.Chat
         public async static Task ServerSide(TcpClient sender, string message)
         {
             var regex = @"(<[\w]*>)";
-            List<string> usernames = Regex.Split(message, regex).Where(s =>Regex.Match(s, regex).Success).ToList();
-            if(!SocketChat.Public.Users.Any(u=>u.Username != null && u.Username.ToLower().Contains(usernames[0].ToLower())))
-            if(SocketChat.Public.Users.Any(u=>u.Client == sender && u.Username == null))
-            SocketChat.Public.Users.Where(u=>u.Client == sender && u.Username == null)
-                        .FirstOrDefault()
-                        .Username = usernames.FirstOrDefault();//store username 
+            List<string> usernames = Regex.Split(message, regex).Where(s => Regex.Match(s, regex).Success).ToList();
+            if(!SocketChat.Public.Users.Any(u => u.Username != null && u.Username.ToLower().Contains(usernames[0].ToLower())))
+                if(SocketChat.Public.Users.Any(u => u.Client == sender && u.Username == null))
+                    SocketChat.Public.Users.Where(u => u.Client == sender && u.Username == null)
+                                           .FirstOrDefault()
+                                           .Username = usernames.FirstOrDefault();//store username 
             var m = message.ToLower();
-            if(m.Contains("target") || m.Contains("-t"))
+            if(m.Contains("history") || m.Contains("-h"))
+            {
+                SendHistory(sender);
+            }
+            else if(m.Contains("target") || m.Contains("-t"))
             {
                 SendToTarget(usernames,message,regex);
+                if(SocketChat.Public.SeeEverything)DisplayRemoteMessage(message); 
             }
             else if(m.Contains("file") || m.Contains("-f"))
             {
@@ -33,8 +38,9 @@ namespace ConsoleApplication.Functions.Chat
                 Wizz(message, regex);
                 await SendToEveryone(sender, message);
             }
-            else{
+            else{ //simple broadcast message
                await SendToEveryone(sender, message);
+               SocketChat.Public.History.Add(message);// add message to history
             }
         }
 
@@ -52,6 +58,14 @@ namespace ConsoleApplication.Functions.Chat
                 Wizz(message, regex);
             }
         }
+        private static void SendHistory(TcpClient requester)
+        {
+            string previousMessages="";
+            foreach(var previousMessage in SocketChat.Public.History) 
+                previousMessages += previousMessage+"\n";
+            var target = SocketChat.Public.Users.Where(u => u.Client == requester).ToList();
+            SocketChat.Public.ServerBroadCastSpecificAsync(target, previousMessages);
+        }
 
         private async static Task SendToEveryone(TcpClient sender, string message)
         {
@@ -62,39 +76,42 @@ namespace ConsoleApplication.Functions.Chat
             }
         }
 
-        private static void SendToTarget(List<string> usernames,string message, string regex)
+        public static void SendToTarget(List<string> usernames,string message, string regex)
         {
             var toTrim = new char[3]{'<','_','>'};
             usernames.Remove(usernames.FirstOrDefault()); // everyone exept sender
             List<SocketUser> targetsList = new List<SocketUser>();
-            foreach(var user in SocketChat.Public.Users)
-                foreach(var username in usernames)
-                    if(user.Username.Trim(toTrim).ToLower()
-                       .Contains(username.Trim(toTrim).ToLower()))
-                    {
-                        var tab = Regex.Split(message, regex).ToList();
-                        message ="";
-                        foreach(string s in tab.ToList())
+            if(SocketChat.Public.Users.Count>0)
+                foreach(var user in SocketChat.Public.Users)
+                    foreach(var username in usernames)
+                        if(user.Username.Trim(toTrim)
+                                        .ToLower()
+                                        .Contains(username.Trim(toTrim)
+                                                          .ToLower()))
                         {
-                            if(s.ToLower().Trim() == "-t"|| s.ToLower().Trim() == "target"){ //optional maybe usefule to notice its private message
-                                tab.Remove(s);
-                                continue;
+                            var tab = Regex.Split(message, regex).ToList();
+                            message ="";
+                            foreach(string s in tab.ToList())
+                            {
+                                if(s.ToLower().Trim() == "-t"|| s.ToLower().Trim() == "target"){
+                                    message += "***Private Message***";
+                                    continue;
+                                }
+                                if(s == username){
+                                    tab.Remove(s);
+                                    continue;
+                                } 
+                                message += s;
                             }
-                            if(s == username){
-                                tab.Remove(s);
-                                continue;
-                            } 
-                            message += s;
+                            targetsList.Add(user);
                         }
-                        targetsList.Add(user);
-                    }
             if(targetsList.Count>0)
-            SocketChat.Public.ServerBroadCastSpecificAsync(targetsList, message);
+                SocketChat.Public.ServerBroadCastSpecificAsync(targetsList, message);
         }
 
         public static void Wizz(string message, string regex)
         {
-            for(int i = 0; i<=10; i++)
+            for(int i = 0; i<=5; i++)
             {
                 Console.Beep();
                 Console.SetWindowPosition(Console.WindowLeft-10, Console.WindowTop);
@@ -107,8 +124,7 @@ namespace ConsoleApplication.Functions.Chat
             foreach(string s in tab.ToList())
             {
                 if(s.ToLower().Trim() == "-w" || s.ToLower().Trim() == "wizz" ){
-                    tab.Remove(s);
-                    continue;
+                    message += "***Wizz***";
                 }
                 message += s;
             }
@@ -122,5 +138,7 @@ namespace ConsoleApplication.Functions.Chat
             C.WL(message);
             Console.ResetColor();
         }
+
+        
     }
 }
