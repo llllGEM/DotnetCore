@@ -64,8 +64,8 @@ namespace ConsoleApplication.Functions.Chat
                 try{
                     var t = AcceptClientsAsync(Listener);
                     var t1 = ClientBroadCastAsync();
-                    var t2 = ServerBroadCastAsync(GenerateUsername(), ct); // Parallel to avoid blocking
-                    Task.WaitAll(new []{t,t1});
+                    var t2 = ServerBroadCastAsync(GenerateUsername(), ct); 
+                    Task.WaitAll(new []{t,t1});// t2 Parallel to avoid blocking
                 }catch(Exception e){C.WL(e.Message); StopRestart(); return;}
             }
 

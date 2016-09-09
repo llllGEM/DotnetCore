@@ -74,7 +74,7 @@ namespace ConsoleApplication.Functions.Chat
                     {
                         var tab = Regex.Split(message, regex).ToList();
                         message ="";
-                        foreach(string s in tab.ToList())// ToList Mandatory to avoid collectionChangedException
+                        foreach(string s in tab.ToList())
                         {
                             if(s.ToLower().Trim() == "-t"|| s.ToLower().Trim() == "target"){ //optional maybe usefule to notice its private message
                                 tab.Remove(s);
