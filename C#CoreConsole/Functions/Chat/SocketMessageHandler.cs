@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace ConsoleApplication.Functions.Chat
 {
-    public static class SocketMessage
+    public static class SocketMessageHandler
     {
-        public async static Task ServerCommandHandler(TcpClient sender, string message)
+        public async static Task ServerSide(TcpClient sender, string message)
         {
             var regex = @"(<[\w]*>)";
             List<string> usernames = Regex.Split(message, regex).Where(s =>Regex.Match(s, regex).Success).ToList();
@@ -38,7 +38,7 @@ namespace ConsoleApplication.Functions.Chat
             }
         }
 
-        public static void ClientCommandHandler(string message)
+        public static void ClientSide(string message)
         {
             DisplayRemoteMessage(message);
             var regex = @"(<[\w]*>)";
