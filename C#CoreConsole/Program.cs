@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using ConsoleApplication.Functions;
+using ConsoleApplication.Functions.Chat;
 
 namespace ConsoleApplication
 {       

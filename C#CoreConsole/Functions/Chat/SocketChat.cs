@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
@@ -7,15 +8,16 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ConsoleApplication.Functions
+namespace ConsoleApplication.Functions.Chat
 {
     public static class SocketChat
     {
         public static TcpListener Listener;
-        
+
         public static void Begin(CancellationToken ct) 
         {
             Console.Clear();
+            //Check Utils.cs for C.WL() and all C class methods
             C.WL(@"
              _____            __        __  ________          __ 
             / ___/____  _____/ /_____  / /_/ ____/ /_  ____ _/ /_
@@ -48,9 +50,10 @@ namespace ConsoleApplication.Functions
                 }
             }
         }
+
         public static class Public
         {
-            private static ObservableCollection<TcpClient> Clients = new ObservableCollection<TcpClient>();
+            public static ObservableCollection<SocketUser> Users = new ObservableCollection<SocketUser>();
 
             public async static Task ServerStartAsync(CancellationToken ct)
             {
@@ -91,16 +94,16 @@ namespace ConsoleApplication.Functions
                     try{client = await listener.AcceptTcpClientAsync();}
                     catch(Exception e){C.WL(e.Message);StopRestart();return;}
                     C.WL("New Client Connected ");
-                    Clients.Add(client);
+                    Users.Add(new SocketUser{Client = client});
                 }
             }
 
             private async static Task ClientBroadCastAsync()
             {
-                Clients.CollectionChanged += async (s, e) => {
-                    if(Clients.LastOrDefault().Connected)
-                    await ClientSendReceiveAsync(Clients.LastOrDefault());
-                };  
+                Users.CollectionChanged += async (s,e) => {
+                    if(Users.LastOrDefault().Client.Connected)
+                    await ClientSendReceiveAsync(Users.LastOrDefault().Client);
+                };
             }
 
             private async static Task ClientSendReceiveAsync(TcpClient sender)
@@ -108,12 +111,8 @@ namespace ConsoleApplication.Functions
                 while(true){
                     byte[] bytes = new byte[sender.ReceiveBufferSize];
                     await sender.GetStream().ReadAsync(bytes,0,bytes.Length);
-                    var message = Encoding.UTF8.GetString(bytes).Trim();
-                    DisplayRemoteMessage(message, U.Colors[new Random().Next(0,U.Colors.Length)]);
-                    foreach(var receiver in Clients.Where(c => c != sender)){ // transmit message to everyone exept sender
-                        var b = Encoding.UTF8.GetBytes(message);
-                        await receiver.GetStream().WriteAsync(b, 0, b.Length);
-                    }
+                    var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
+                    await SocketMessage.CommandHandler(sender, message);
                 }
             }
 
@@ -125,10 +124,20 @@ namespace ConsoleApplication.Functions
                         else continue;
                         var message = C.Read();
                         var b = Encoding.UTF8.GetBytes(serverUsername+message);
-                        foreach(var client in Clients)
-                        client.GetStream().WriteAsync(b, 0, b.Length);
+                        foreach(var user in Users)
+                        user.Client.GetStream().WriteAsync(b, 0, b.Length);
                     }
                 }, ct);
+            }
+
+            public static void ServerBroadCastSpecificAsync(List<SocketUser> Users,string message = null, string file = null)
+            {   
+                if(message != null)
+                {
+                    var b = Encoding.UTF8.GetBytes(message);
+                    foreach(var user in Users)
+                    user.Client.GetStream().WriteAsync(b, 0, b.Length);   
+                }
             }
             
         }
@@ -156,8 +165,9 @@ namespace ConsoleApplication.Functions
             }
 
         }
-        
+
         #region Private Functions
+        
         private static Task SendAsync(TcpClient client, CancellationToken ct, string username = null ,string message = null)
         {
             return Task.Factory.StartNew(()=>{
@@ -176,8 +186,8 @@ namespace ConsoleApplication.Functions
                 while(true){
                     byte[] bytes = new byte[client.ReceiveBufferSize];
                     await client.GetStream().ReadAsync(bytes,0,bytes.Length);
-                    var message = Encoding.UTF8.GetString(bytes).Trim();
-                    DisplayRemoteMessage(message, U.Colors[new Random().Next(0,U.Colors.Length)]);
+                    var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
+                    SocketMessage.DisplayRemoteMessage(message);
                 }
             }, ct);
         }
@@ -185,20 +195,12 @@ namespace ConsoleApplication.Functions
         private static string GenerateUsername()
         {
             C.WL("Type Username or Press Enter To Generate...");
-            char repeat = '_'; string end = "> "; // username______> 
+            char start = '<';char repeat = '_'; string end = "> "; // <username______> 
             var username = C.Read();
             C.WL("Press Enter Before To Write Something...");
             return username.Length > 0 
-                ? username.PadRight(U.NameLength,repeat)+end
-                : (Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
-        }
-
-        private static void DisplayRemoteMessage(string message,Tuple<ConsoleColor,ConsoleColor> colorSet)
-        {
-            Console.BackgroundColor = colorSet.Item1;
-            Console.ForegroundColor = colorSet.Item2;
-            C.WL(message);
-            Console.ResetColor();
+                ? start+username.PadRight(U.NameLength,repeat)+end
+                : start+(Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
         }
 
         private async static void StopRestart()
@@ -218,5 +220,6 @@ namespace ConsoleApplication.Functions
         }
 
         #endregion Private Functions
+
     }
 }
