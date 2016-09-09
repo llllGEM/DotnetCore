@@ -112,7 +112,7 @@ namespace ConsoleApplication.Functions.Chat
                     byte[] bytes = new byte[sender.ReceiveBufferSize];
                     await sender.GetStream().ReadAsync(bytes,0,bytes.Length);
                     var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
-                    await SocketMessage.CommandHandler(sender, message);
+                    await SocketMessage.ServerCommandHandler(sender, message);
                 }
             }
 
@@ -187,7 +187,7 @@ namespace ConsoleApplication.Functions.Chat
                     byte[] bytes = new byte[client.ReceiveBufferSize];
                     await client.GetStream().ReadAsync(bytes,0,bytes.Length);
                     var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
-                    SocketMessage.DisplayRemoteMessage(message);
+                    SocketMessage.ClientCommandHandler(message);
                 }
             }, ct);
         }

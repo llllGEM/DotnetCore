@@ -10,7 +10,7 @@ namespace ConsoleApplication.Functions.Chat
 {
     public static class SocketMessage
     {
-        public async static Task CommandHandler(TcpClient sender, string message)
+        public async static Task ServerCommandHandler(TcpClient sender, string message)
         {
             var regex = @"(<[\w]*>)";
             List<string> usernames = Regex.Split(message, regex).Where(s =>Regex.Match(s, regex).Success).ToList();
@@ -31,13 +31,29 @@ namespace ConsoleApplication.Functions.Chat
             else if(m.Contains("wizz") || m.Contains("-w"))
             {     
                 Wizz(message, regex);
+                await SendToEveryone(sender, message);
             }
             else{
-                await Send(sender, message);
+               await SendToEveryone(sender, message);
             }
         }
 
-        private async static Task Send(TcpClient sender, string message)
+        public static void ClientCommandHandler(string message)
+        {
+            DisplayRemoteMessage(message);
+            var regex = @"(<[\w]*>)";
+            var m = message.ToLower();
+            if(m.Contains("file") || m.Contains("-f"))
+            {
+                //TODO handle file transfer
+            }
+            else if(m.Contains("wizz") || m.Contains("-w"))
+            {     
+                Wizz(message, regex);
+            }
+        }
+
+        private async static Task SendToEveryone(TcpClient sender, string message)
         {
             DisplayRemoteMessage(message);
             foreach(var user in SocketChat.Public.Users.Where(c => c.Client != sender)){ // transmit message to everyone exept sender
@@ -54,7 +70,7 @@ namespace ConsoleApplication.Functions.Chat
             foreach(var user in SocketChat.Public.Users)
                 foreach(var username in usernames)
                     if(user.Username.Trim(toTrim).ToLower()
-                        .Contains(username.Trim(toTrim).ToLower()))
+                       .Contains(username.Trim(toTrim).ToLower()))
                     {
                         var tab = Regex.Split(message, regex).ToList();
                         message ="";
@@ -72,6 +88,7 @@ namespace ConsoleApplication.Functions.Chat
                         }
                         targetsList.Add(user);
                     }
+            if(targetsList.Count>0)
             SocketChat.Public.ServerBroadCastSpecificAsync(targetsList, message);
         }
 
