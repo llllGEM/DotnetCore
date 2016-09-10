@@ -124,14 +124,17 @@ namespace ConsoleApplication.Functions.Chat
             private static Task ServerBroadCastAsync(string serverUsername, CancellationToken ct)
             {   
                 return Task.Factory.StartNew(()=>{
+                    string firstChar;
                     while(true){
-                        if(C.Key().Key == ConsoleKey.Enter)C.Write(serverUsername);
+                        if(ManageInput(serverUsername, out firstChar, server: true)){
+                            var message = firstChar+C.Read();
+                            var b = Encoding.UTF8.GetBytes(serverUsername+message);
+                            foreach(var user in Users)
+                            user.Client.GetStream().WriteAsync(b, 0, b.Length);
+                            History.Add(serverUsername+message);
+                        }
                         else continue;
-                        var message = C.Read();
-                        var b = Encoding.UTF8.GetBytes(serverUsername+message);
-                        foreach(var user in Users)
-                        user.Client.GetStream().WriteAsync(b, 0, b.Length);
-                        History.Add(message);
+                        
                     }
                 }, ct);
             }
@@ -144,6 +147,18 @@ namespace ConsoleApplication.Functions.Chat
                     foreach(var user in Users)
                     user.Client.GetStream().WriteAsync(b, 0, b.Length);   
                 }
+            }
+
+            public static List<SocketUser> GetUsersFromName(List<string> names)
+            {
+                var toTrim = new char[3]{'<','_','>'};
+                var usersList = new List<SocketUser>();
+                foreach(var name in names)
+                {
+                    var user = Public.Users.Where(u => u.Username.Trim(toTrim).Contains(name.Trim(toTrim))).FirstOrDefault();
+                    if(user != null) usersList.Add(user);
+                }
+                return usersList;
             }
             
         }
@@ -173,22 +188,42 @@ namespace ConsoleApplication.Functions.Chat
         }
 
         #region Private Functions
-        
-        private static Task SendAsync(TcpClient client, CancellationToken ct, string username = null ,string message = null)
+
+        public static bool ManageInput(string username, out string c, bool server = false)
         {
-            return Task.Factory.StartNew(()=>{
+            if(Console.KeyAvailable){
+                var key = Console.ReadKey(true);
+                if(key.Key == ConsoleKey.Enter) C.Write(username);
+                var k = C.Key();
+                if(k.Key == ConsoleKey.Enter){ c = ""; return false; } 
+                if(k.Key == ConsoleKey.Tab) {
+                    c = SocketMessageHandler.AutoCompleteUsers(C.Key().Key, server); C.Write(c);}
+                else c = k.KeyChar.ToString().ToLower();
+                return true;
+            }
+            c="";
+            return false;
+        }
+        
+        private static Task SendAsync(TcpClient client, CancellationToken ct, string username = null)
+        {
+            return Task.Factory.StartNew(()=>
+            {
+                string firstPart = "";
                 while(true){
-                    if(C.Key().Key == ConsoleKey.Enter)C.Write(username);
+                    if(ManageInput(username, out firstPart)){
+                        var m = Encoding.UTF8.GetBytes(username+firstPart+C.Read());
+                        client.GetStream().WriteAsync(m,0,m.Length);
+                    }
                     else continue;
-                    var m = Encoding.UTF8.GetBytes(message??(username != null ? username+C.Read() : C.Read()));
-                    client.GetStream().WriteAsync(m,0,m.Length);
                 }
             }, ct);
         }
 
         private static Task ReceiveAsync(TcpClient client, CancellationToken ct)
         {
-            return Task.Factory.StartNew(async ()=>{
+            return Task.Factory.StartNew(async ()=>
+            {
                 while(true){
                     byte[] bytes = new byte[client.ReceiveBufferSize];
                     await client.GetStream().ReadAsync(bytes,0,bytes.Length);
@@ -213,7 +248,9 @@ namespace ConsoleApplication.Functions.Chat
         private static void AskPrivacy()
         {
             C.WL("See Every Message ? y/n");
-            if(C.Key().Key ==ConsoleKey.Y) Public.SeeEverything = true;
+            var key = C.Key().Key;
+            if(key == ConsoleKey.Y 
+            || key == ConsoleKey.Enter) Public.SeeEverything = true;
         }
 
         private async static void StopRestart()
