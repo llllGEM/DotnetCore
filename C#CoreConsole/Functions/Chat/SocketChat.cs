@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ namespace ConsoleApplication.Functions.Chat
     public static class SocketChat
     {
         public static TcpListener Listener;
+
+        public static bool StealthMode {get;set;} = false;
 
         public static void Begin(CancellationToken ct) 
         {
@@ -25,10 +28,10 @@ namespace ConsoleApplication.Functions.Chat
            ___/ / /_/ / /__/ ,< /  __/ /_/ /___/ / / / /_/ / /_  
           /____/\____/\___/_/|_|\___/\__/\____/_/ /_/\__,_/\__/  
                                                        ");
-            C.Display("1: Public \t 2: Private");
+            C.Display("\t1: Public \t 2: Private");
             var keyChar = C.Key().KeyChar;
             if(keyChar == '&'){
-                C.Display("1: Server \t 2: Client");
+                C.Display("\t1: Server \t 2: Client");
                 var kc = C.Key().KeyChar;
                 C.Cursor(0, Console.CursorTop);
                 if(kc == '&'){
@@ -39,7 +42,7 @@ namespace ConsoleApplication.Functions.Chat
                 }
             }
             else if (keyChar == 'é'){
-                C.Display("1: Server \t 2: Client");
+                C.Display("\t1: Server \t 2: Client");
                 var kc = C.Key().KeyChar;
                 C.Cursor(0, Console.CursorTop);
                 if(kc == '&'){
@@ -53,6 +56,8 @@ namespace ConsoleApplication.Functions.Chat
 
         public static class Public
         {
+            public static IPAddress IPServer {get; set;} = IPAddress.Any;
+
             public static bool SeeEverything {get;set;} = false;
 
             public static ObservableCollection<SocketUser> Users {get; set;} = new ObservableCollection<SocketUser>();
@@ -65,7 +70,7 @@ namespace ConsoleApplication.Functions.Chat
                 try{Listener.Start();}
                 catch(Exception e){C.WL(e.Message); StopRestart(); return;}
                 C.WL($"GlobalServer Started at: {Listener.Server.LocalEndPoint}");
-                AskPrivacy();
+                AskStealthMode(); AskPrivacy();
                 try{
                     var t = AcceptClientsAsync(Listener);
                     var t1 = ClientBroadCastAsync();
@@ -76,19 +81,17 @@ namespace ConsoleApplication.Functions.Chat
 
             public async static Task ClientConnectAsync(CancellationToken ct, int? port = null)
             {
+                AskServerIPAddress(); AskStealthMode();
                 TcpClient Tcp;
                 try{
                     Tcp = new TcpClient(AddressFamily.InterNetwork);
-                    await Tcp.ConnectAsync(IPAddress.Any, port??U.GlobalPort);
+                    await Tcp.ConnectAsync(Public.IPServer, port??U.GlobalPort);
                 }catch(Exception e){C.WL(e.Message);StopRestart();return;}
                 C.WL($"You are Now Connected to: {Tcp.Client.RemoteEndPoint}");
                 try{
-                    if(Tcp.Client.Connected)
-                    {
-                        var TWrite = SendAsync(Tcp, ct, GenerateUsername()); //Can't start to receive until username chosen (Blocking)
-                        var TRead = ReceiveAsync(Tcp, ct);
-                        Task.WaitAll(new []{TWrite, TRead});
-                    }
+                    var TWrite = SendAsync(Tcp, ct, GenerateUsername()); //Can't start to receive until username chosen (Blocking)
+                    var TRead = ReceiveAsync(Tcp, ct);
+                    Task.WaitAll(new []{TWrite, TRead});
                 }catch(Exception e){C.WL(e.Message);StopRestart();return;}
             }
 
@@ -114,10 +117,18 @@ namespace ConsoleApplication.Functions.Chat
             private async static Task ClientSendReceiveAsync(TcpClient sender)
             {
                 while(true){
-                    byte[] bytes = new byte[sender.ReceiveBufferSize];
+                    byte[] bytes = new byte[sender.SendBufferSize];
                     await sender.GetStream().ReadAsync(bytes,0,bytes.Length);
                     var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
-                    await SocketMessageHandler.ServerSide(sender, message);
+                    if(!StealthMode)
+                        foreach(var s in Regex.Split(message,"(\\0)+"))
+                            if(s == string.Empty) continue;
+                            else if(Regex.Match(s, "(\\0)+").Success) continue;
+                            else {
+                                await SocketMessageHandler.ServerSide(sender, message);
+                                break;
+                            }
+                    else await SocketMessageHandler.ServerSide(sender, message);
                 }
             }
 
@@ -130,11 +141,10 @@ namespace ConsoleApplication.Functions.Chat
                             var message = firstChar+C.Read();
                             var b = Encoding.UTF8.GetBytes(serverUsername+message);
                             foreach(var user in Users)
-                            user.Client.GetStream().WriteAsync(b, 0, b.Length);
-                            History.Add(serverUsername+message);
+                                if(user.Client.Connected)
+                                    user.Client?.GetStream()?.WriteAsync(b, 0, b.Length);
+                            History.Add(serverUsername+message); //Add to History
                         }
-                        else continue;
-                        
                     }
                 }, ct);
             }
@@ -145,7 +155,8 @@ namespace ConsoleApplication.Functions.Chat
                 {
                     var b = Encoding.UTF8.GetBytes(message);
                     foreach(var user in Users)
-                    user.Client.GetStream().WriteAsync(b, 0, b.Length);   
+                        if(user.Client.Connected)
+                            user.Client?.GetStream()?.WriteAsync(b, 0, b.Length);   
                 }
             }
 
@@ -155,7 +166,11 @@ namespace ConsoleApplication.Functions.Chat
                 var usersList = new List<SocketUser>();
                 foreach(var name in names)
                 {
-                    var user = Public.Users.Where(u => u.Username.Trim(toTrim).Contains(name.Trim(toTrim))).FirstOrDefault();
+                    var user = Public.Users.Where(u => u.Username.Trim(toTrim)
+                                                                 .ToLower()
+                                                                 .Contains(name.Trim(toTrim)
+                                                                               .ToLower()))
+                                                                 .FirstOrDefault();
                     if(user != null) usersList.Add(user);
                 }
                 return usersList;
@@ -171,6 +186,7 @@ namespace ConsoleApplication.Functions.Chat
                 try{Listener.Start();}
                 catch(Exception e){C.WL(e.Message); StopRestart(); return;}
                 C.WL($"PrivateServer Started at: {Listener.Server.LocalEndPoint}");
+                AskStealthMode();
                 TcpClient client;
                 try{client = await Listener.AcceptTcpClientAsync();}
                 catch(Exception e){C.WL(e.Message);StopRestart();return;}
@@ -189,19 +205,21 @@ namespace ConsoleApplication.Functions.Chat
 
         #region Private Functions
 
-        public static bool ManageInput(string username, out string c, bool server = false)
+        public static bool ManageInput(string username, out string s, bool server = false)
         {
             if(Console.KeyAvailable){
                 var key = Console.ReadKey(true);
                 if(key.Key == ConsoleKey.Enter) C.Write(username);
                 var k = C.Key();
-                if(k.Key == ConsoleKey.Enter){ c = ""; return false; } 
+                if(k.Key == ConsoleKey.Enter){ s = ""; return false; } 
                 if(k.Key == ConsoleKey.Tab) {
-                    c = SocketMessageHandler.AutoCompleteUsers(C.Key().Key, server); C.Write(c);}
-                else c = k.KeyChar.ToString().ToLower();
+                    s = SocketMessageHandler.AutoCompleteUsers(C.Key().Key, server); 
+                    C.Write(s);} //AutoComplete
+                else s = k.KeyChar.ToString().ToLower();
                 return true;
             }
-            c="";
+            else Thread.Sleep(200);
+            s="";
             return false;
         }
         
@@ -213,9 +231,9 @@ namespace ConsoleApplication.Functions.Chat
                 while(true){
                     if(ManageInput(username, out firstPart)){
                         var m = Encoding.UTF8.GetBytes(username+firstPart+C.Read());
-                        client.GetStream().WriteAsync(m,0,m.Length);
+                        if(client.Connected)
+                            client?.GetStream()?.WriteAsync(m,0,m.Length);
                     }
-                    else continue;
                 }
             }, ct);
         }
@@ -225,10 +243,15 @@ namespace ConsoleApplication.Functions.Chat
             return Task.Factory.StartNew(async ()=>
             {
                 while(true){
-                    byte[] bytes = new byte[client.ReceiveBufferSize];
+                    byte[] bytes = new byte[client.SendBufferSize];
                     await client.GetStream().ReadAsync(bytes,0,bytes.Length);
                     var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
-                    SocketMessageHandler.ClientSide(message);
+                    if(!StealthMode)
+                        foreach(var s in Regex.Split(message,"(\\0)+"))
+                            if(s == string.Empty) continue;
+                            else if(Regex.Match(s, "(\\0)+").Success) continue;
+                            else { SocketMessageHandler.ClientSide(message); break;}
+                    else  SocketMessageHandler.ClientSide(message);
                 }
             }, ct);
         }
@@ -251,6 +274,23 @@ namespace ConsoleApplication.Functions.Chat
             var key = C.Key().Key;
             if(key == ConsoleKey.Y 
             || key == ConsoleKey.Enter) Public.SeeEverything = true;
+        }
+
+        //if one disconnect then send an infinite stream to hide console text for everyon
+        private static void AskStealthMode() 
+        {
+            C.WL("StealthMode ? y/n");
+            var key = C.Key().Key;
+            if(key == ConsoleKey.Y 
+            || key == ConsoleKey.Enter) StealthMode = true;
+        }
+
+        private static void AskServerIPAddress()
+        {
+            C.WL("Enter Server Ip Address...");
+            var ip = C.Read();
+            if(ip != string.Empty)
+                Public.IPServer = IPAddress.Parse(ip);
         }
 
         private async static void StopRestart()

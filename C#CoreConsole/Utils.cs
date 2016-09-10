@@ -11,7 +11,7 @@ namespace ConsoleApplication
 
     public static class U
     {
-        public static int GlobalPort = 1111;
+        public static int GlobalPort = 2222;
         public static int PrivatePort = 9999;
         public static int NameLength = 15;
         public static Parse<int> ParseInt = int.TryParse;

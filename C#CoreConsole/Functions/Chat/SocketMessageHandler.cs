@@ -18,9 +18,11 @@ namespace ConsoleApplication.Functions.Chat
                                           .Where(s => Regex.Match(s, UserRegex).Success)
                                           .ToList();
             try{
+                if(usernames.Count>0)
                 if(!SocketChat.Public.Users.Any(u => u.Username != null 
                                               && u.Username.ToLower()
                                                            .Contains(usernames[0]?.ToLower())))
+                if(sender != null)
                 if(SocketChat.Public.Users.Any(u => u.Client == sender && u.Username == null))
                     SocketChat.Public.Users.Where(u => u.Client == sender && u.Username == null)
                                            .FirstOrDefault()
@@ -48,10 +50,11 @@ namespace ConsoleApplication.Functions.Chat
             else if(m.Contains("wizz") || m.Contains("-w"))
             {   // server can avoid beeing wized if seeEverything true  
                 if(!SocketChat.Public.SeeEverything) Wizz(message, UserRegex); 
-                if(SocketChat.Public.SeeEverything) DisplayRemoteMessage(message);
+                if(SocketChat.Public.SeeEverything) DisplayRemoteMessage(message); //logs wizz in server no in history
                 await SendToEveryone(sender, message);
             }
             else{ //simple broadcast message
+               DisplayRemoteMessage(message); // display local
                await SendToEveryone(sender, message);
                SocketChat.Public.History.Add(message);// add message to history
             }
@@ -86,13 +89,14 @@ namespace ConsoleApplication.Functions.Chat
             foreach(string s in tab2.ToList())
             {
                 if(s.ToLower().Trim() == "-u"|| s.ToLower().Trim() == "users"){
-                    message += "<***Users Connected***>\n";
+                    message += $"<*** {tab.Count} User{{s}} Connected***>\n";
                     continue;
                 }
                 message += s;
             }
             DisplayRemoteMessage(message);
         }
+
         public static string AutoCompleteUsers(ConsoleKey key, bool server = false)
         {
             var toTrim = new char[3]{'<','_','>'};
@@ -110,14 +114,16 @@ namespace ConsoleApplication.Functions.Chat
             }
             return autoCompletedString;
         }
+
         private static void SendConnectedUsers(TcpClient requester, string message)
         {
-            message = "-u";
+            message = "users";
             foreach (var user in SocketChat.Public.Users.Where(u => u.Client != requester)) 
                 message += user.Username+"\n";
             var target = SocketChat.Public.Users.Where(u => u.Client == requester).FirstOrDefault();
             SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{target}, message);
         }
+
         private static void SendChatHistory(TcpClient requester)
         {
             string previousMessages="";
@@ -129,11 +135,11 @@ namespace ConsoleApplication.Functions.Chat
 
         private async static Task SendToEveryone(TcpClient sender, string message)
         {
-            DisplayRemoteMessage(message);
             foreach(var user in SocketChat.Public.Users.Where(c => c.Client != sender))
             { // transmit message to everyone exept sender
                 var bytes = Encoding.UTF8.GetBytes(message);
-                await user.Client.GetStream().WriteAsync(bytes, 0, bytes.Length);
+                if(user.Client.Connected)
+                    await user.Client?.GetStream()?.WriteAsync(bytes, 0, bytes.Length);
             }
         }
 
