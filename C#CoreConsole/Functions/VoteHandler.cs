@@ -18,7 +18,7 @@ namespace ConsoleApplication.Functions
         {
             Console.Clear();
             FromFile = true;
-            C.Display("Copy paste your file (with CampusId + Name separated or not) into console then press Enter...");
+            C.WL("Copy paste your file (with CampusId + Name separated or not) into console then press Enter...");
             FilePath = C.Read().TrimEnd();
             StreamReader reader;
             try{
@@ -26,7 +26,7 @@ namespace ConsoleApplication.Functions
                 if(reader != null) SetCampusIds(reader);
             }
             catch(Exception e){
-                  C.Display(e.Message+"\n Press Enter To continue...");  
+                  C.WL(e.Message+"\n Press Enter To continue...");  
                   C.Read();
                   GetFile();
             }
@@ -34,7 +34,7 @@ namespace ConsoleApplication.Functions
 
         public static void WriteVotesToFile() 
         {
-            if(!SetVotes()){C.Display("No Data Readable");return;}
+            if(!SetVotes()){C.WL("No Data Readable");return;}
             var OutputStrings = new string[Votes.Count];
             foreach(var vote in Votes) OutputStrings[Votes.IndexOf(vote)] = vote.Name.PadRight(20)+vote.CampusId+" Exam: "+vote.Exam+" Note: "+vote.Mark;
             var session = new Session{ClassVotes = Votes,Date = DateTime.Now};
@@ -45,7 +45,7 @@ namespace ConsoleApplication.Functions
             Program.ProgressBar();
             var newFile = FilePath.Replace(Path.GetFileName(FilePath), $"Session{session.Id}.txt");
             File.WriteAllLines(newFile, OutputStrings);
-            C.Display("Done !");
+            C.WL("Done !");
             reset();
         }
         public static void GetMarks(int mark = -1, List<int> marks = null)
@@ -69,7 +69,7 @@ namespace ConsoleApplication.Functions
         
         public static bool SetVotes()
         {
-            C.Display("Exam name:");
+            C.WL("Exam name:");
             var exam = C.Read();
             foreach(var id in CampusIds){
                 Vote v = new Vote{ 
