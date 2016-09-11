@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using ConsoleApplication.Functions;
+using ConsoleApplication.Functions.Randomizer;
 using ConsoleApplication.Functions.Chat;
 
 namespace ConsoleApplication
@@ -22,15 +22,16 @@ namespace ConsoleApplication
         {
             try{
                 int nb;
-                C.WL("Choose program:\n\n 1: Randomizer \n\n 2: SocketChat");   
+                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: Randomizer");   
                 if(!U.ParseInt(C.Read(), out nb)) {await MainAsync(args);EndTasks();}
                 else
                 switch(nb){
-                        case 1: Randomizer.Randomize();
+                        case 1: SocketChat.Begin(cts.Token);
                                 break;
-                        case 2: SocketChat.Begin(cts.Token);
+                        case 2: Randomizer.Randomize();
                                 break;
-                        default: Console.Clear();
+                        default: SocketChat.Begin(cts.Token);
+                                 Console.Clear();
                                  break;
                 }
             }

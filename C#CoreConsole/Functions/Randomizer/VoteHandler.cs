@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using ConsoleApplication.Data;
 
-namespace ConsoleApplication.Functions
+namespace ConsoleApplication.Functions.Randomizer
 {
     public static class VoteHandler
     {

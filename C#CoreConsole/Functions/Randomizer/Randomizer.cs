@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace ConsoleApplication.Functions
+namespace ConsoleApplication.Functions.Randomizer
 {
     public static class Randomizer
     {

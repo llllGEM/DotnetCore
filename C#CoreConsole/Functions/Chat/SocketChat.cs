@@ -149,15 +149,12 @@ namespace ConsoleApplication.Functions.Chat
                 }, ct);
             }
 
-            public static void ServerBroadCastSpecificAsync(List<SocketUser> Users,string message = null, string file = null)
+            public static void ServerBroadCastSpecificAsync(List<SocketUser> Users,string message, string file = null)
             {   
-                if(message != null)
-                {
-                    var b = Encoding.UTF8.GetBytes(message);
-                    foreach(var user in Users)
-                        if(user.Client.Connected)
-                            user.Client.GetStream()?.WriteAsync(b, 0, b.Length);   
-                }
+                var b = Encoding.UTF8.GetBytes(message);
+                foreach(var user in Users)
+                    if(user.Client.Connected)
+                        user.Client.GetStream()?.WriteAsync(b, 0, b.Length);   
             }
 
             public static List<SocketUser> GetUsersFromName(List<string> names)
