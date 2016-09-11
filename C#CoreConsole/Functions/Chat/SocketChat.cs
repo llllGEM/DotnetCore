@@ -27,28 +27,28 @@ namespace ConsoleApplication.Functions.Chat
             \__ \/ __ \/ ___/ //_/ _ \/ __/ /   / __ \/ __ `/ __/
            ___/ / /_/ / /__/ ,< /  __/ /_/ /___/ / / / /_/ / /_  
           /____/\____/\___/_/|_|\___/\__/\____/_/ /_/\__,_/\__/  
-                                                       ");
-            C.Display("\t1: Public \t 2: Private");
-            var keyChar = C.Key().KeyChar;
-            if(keyChar == '&'){
-                C.Display("\t1: Server \t 2: Client");
-                var kc = C.Key().KeyChar;
+                                                               ");
+            C.Display("\t<--: Public \t Private :-->           ");
+            var key = C.Key().Key;
+            if(key == ConsoleKey.LeftArrow){
+                C.Display("\t<--: Server \t Client :-->        ");
+                var k = C.Key().Key;
                 C.Cursor(0, Console.CursorTop);
-                if(kc == '&'){
+                if(k == ConsoleKey.LeftArrow){
                     Public.ServerStartAsync(ct).Wait();
                 }
-                else if (kc == 'é'){
+                else if (k == ConsoleKey.RightArrow){
                     Public.ClientConnectAsync(ct).Wait();
                 }
             }
-            else if (keyChar == 'é'){
-                C.Display("\t1: Server \t 2: Client");
-                var kc = C.Key().KeyChar;
+            else if (key == ConsoleKey.RightArrow){
+                C.Display("\t<--: Server \t Client :-->        ");
+                var k = C.Key().Key;
                 C.Cursor(0, Console.CursorTop);
-                if(kc == '&'){
+                if(k == ConsoleKey.LeftArrow){
                     Private.ServerStartAsync(ct).Wait();
                 }
-                else if (kc == 'é'){
+                else if (k == ConsoleKey.RightArrow){
                     Public.ClientConnectAsync(ct, U.PrivatePort).Wait();
                 }
             }
@@ -66,22 +66,23 @@ namespace ConsoleApplication.Functions.Chat
 
             public async static Task ServerStartAsync(CancellationToken ct)
             {
-                Listener = new TcpListener(IPAddress.Any, U.GlobalPort);
+                await U.CheckEnvironementAsync();
+                Listener = new TcpListener(IPServer, U.GlobalPort);
                 try{Listener.Start();}
                 catch(Exception e){C.WL(e.Message); StopRestart(); return;}
                 C.WL($"GlobalServer Started at: {Listener.Server.LocalEndPoint}");
-                AskStealthMode(); AskPrivacy();
+                Display.AskStealthMode(); Display.AskPrivacy();
                 try{
                     var t = AcceptClientsAsync(Listener);
                     var t1 = ClientBroadCastAsync();
-                    var t2 = ServerBroadCastAsync(GenerateUsername(), ct); 
+                    var t2 = ServerBroadCastAsync(Display.GenerateUsername(), ct); 
                     Task.WaitAll(new []{t,t1});// t2 Parallel to avoid blocking
                 }catch(Exception e){C.WL(e.Message); StopRestart(); return;}
             }
 
             public async static Task ClientConnectAsync(CancellationToken ct, int? port = null)
             {
-                AskServerIPAddress(); AskStealthMode();
+                Display.AskServerIPAddress(); Display.AskStealthMode();
                 TcpClient Tcp;
                 try{
                     Tcp = new TcpClient(AddressFamily.InterNetwork);
@@ -89,7 +90,7 @@ namespace ConsoleApplication.Functions.Chat
                 }catch(Exception e){C.WL(e.Message);StopRestart();return;}
                 C.WL($"You are Now Connected to: {Tcp.Client.RemoteEndPoint}");
                 try{
-                    var TWrite = SendAsync(Tcp, ct, GenerateUsername()); //Can't start to receive until username chosen (Blocking)
+                    var TWrite = SendAsync(Tcp, ct, Display.GenerateUsername()); //Can't start to receive until username chosen (Blocking)
                     var TRead = ReceiveAsync(Tcp, ct);
                     Task.WaitAll(new []{TWrite, TRead});
                 }catch(Exception e){C.WL(e.Message);StopRestart();return;}
@@ -110,11 +111,11 @@ namespace ConsoleApplication.Functions.Chat
             {
                 Users.CollectionChanged += async (s,e) => {
                     if(Users.LastOrDefault().Client.Connected)
-                    await ClientSendReceiveAsync(Users.LastOrDefault().Client);
+                    await ClientReceiveSendAsync(Users.LastOrDefault().Client);
                 };
             }
 
-            private async static Task ClientSendReceiveAsync(TcpClient sender)
+            private async static Task ClientReceiveSendAsync(TcpClient sender)
             {
                 while(true){
                     byte[] bytes = new byte[sender.SendBufferSize];
@@ -134,18 +135,17 @@ namespace ConsoleApplication.Functions.Chat
 
             private static Task ServerBroadCastAsync(string serverUsername, CancellationToken ct)
             {   
-                return Task.Factory.StartNew(()=>{
+                return Task.Factory.StartNew(async()=>{
                     string firstChar;
-                    while(true){
+                    while(true)
                         if(ManageInput(serverUsername, out firstChar, server: true)){
-                            var message = firstChar+C.Read();
-                            var b = Encoding.UTF8.GetBytes(serverUsername+message);
-                            foreach(var user in Users)
-                                if(user.Client.Connected)
-                                    user.Client?.GetStream()?.WriteAsync(b, 0, b.Length);
+                            var message = serverUsername+firstChar+C.Read();
+                            C.Cursor(message.Length, Console.CursorTop-1); //don't show Enter pressed
+                            await SocketMessageHandler.ServerSide(new TcpClient(), message, true);
+                            if(Users.Where(u => u.Client.Connected).Count() > 0)
+                                await Display.ReceiptAsync();
                             History.Add(serverUsername+message); //Add to History
                         }
-                    }
                 }, ct);
             }
 
@@ -156,7 +156,7 @@ namespace ConsoleApplication.Functions.Chat
                     var b = Encoding.UTF8.GetBytes(message);
                     foreach(var user in Users)
                         if(user.Client.Connected)
-                            user.Client?.GetStream()?.WriteAsync(b, 0, b.Length);   
+                            user.Client.GetStream()?.WriteAsync(b, 0, b.Length);   
                 }
             }
 
@@ -182,11 +182,12 @@ namespace ConsoleApplication.Functions.Chat
         {
             public async static Task ServerStartAsync(CancellationToken ct)
             {
-                Listener= new TcpListener(IPAddress.Any, U.PrivatePort);
+                await U.CheckEnvironementAsync();
+                Listener= new TcpListener(Public.IPServer, U.PrivatePort);
                 try{Listener.Start();}
                 catch(Exception e){C.WL(e.Message); StopRestart(); return;}
                 C.WL($"PrivateServer Started at: {Listener.Server.LocalEndPoint}");
-                AskStealthMode();
+                Display.AskStealthMode();
                 TcpClient client;
                 try{client = await Listener.AcceptTcpClientAsync();}
                 catch(Exception e){C.WL(e.Message);StopRestart();return;}
@@ -195,7 +196,7 @@ namespace ConsoleApplication.Functions.Chat
                     if(client.Connected)
                     {
                         var TRead = ReceiveAsync(client, ct);
-                        var TWrite = SendAsync(client, ct, GenerateUsername());
+                        var TWrite = SendAsync(client, ct, Display.GenerateUsername());
                         Task.WaitAll(new []{TRead, TWrite});
                     }
                 }catch(Exception e){C.WL(e.Message);StopRestart();return;}
@@ -213,6 +214,7 @@ namespace ConsoleApplication.Functions.Chat
                 var k = C.Key();
                 if(k.Key == ConsoleKey.Enter){ s = ""; return false; } 
                 if(k.Key == ConsoleKey.Tab) {
+                    C.Cursor(username.Length, Console.CursorTop);//hide tab pressed
                     s = SocketMessageHandler.AutoCompleteUsers(C.Key().Key, server); 
                     C.Write(s);} //AutoComplete
                 else s = k.KeyChar.ToString().ToLower();
@@ -223,18 +225,19 @@ namespace ConsoleApplication.Functions.Chat
             return false;
         }
         
-        private static Task SendAsync(TcpClient client, CancellationToken ct, string username = null)
+        private static Task SendAsync(TcpClient client, CancellationToken ct, string username)
         {
             return Task.Factory.StartNew(()=>
             {
                 string firstPart = "";
-                while(true){
+                while(true)
                     if(ManageInput(username, out firstPart)){
-                        var m = Encoding.UTF8.GetBytes(username+firstPart+C.Read());
+                        var message = username+firstPart+C.Read();
+                        var b = Encoding.UTF8.GetBytes(message);
+                        C.Cursor(message.Length, Console.CursorTop-1); //don't show Enter pressed
                         if(client.Connected)
-                            client?.GetStream()?.WriteAsync(m,0,m.Length);
+                            client.GetStream()?.WriteAsync(b,0,b.Length);
                     }
-                }
             }, ct);
         }
 
@@ -256,59 +259,13 @@ namespace ConsoleApplication.Functions.Chat
             }, ct);
         }
 
-
-        private static string GenerateUsername()
-        {
-            C.WL("Type Username or Press Enter To Generate...");
-            char start = '<';char repeat = '_'; string end = "> "; // <username______> 
-            var username = C.Read();
-            C.WL("Press Enter Before To Write Something...");
-            return username.Length > 0 
-                 ? start+username.PadRight(U.NameLength,repeat)+end
-                 : start+(Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
-        }
-
-        private static void AskPrivacy()
-        {
-            C.WL("See Every Message ? y/n");
-            var key = C.Key().Key;
-            if(key == ConsoleKey.Y 
-            || key == ConsoleKey.Enter) Public.SeeEverything = true;
-        }
-
-        //if one disconnect then send an infinite stream to hide console text for everyon
-        private static void AskStealthMode() 
-        {
-            C.WL("StealthMode ? y/n");
-            var key = C.Key().Key;
-            if(key == ConsoleKey.Y 
-            || key == ConsoleKey.Enter) StealthMode = true;
-        }
-
-        private static void AskServerIPAddress()
-        {
-            C.WL("Enter Server Ip Address...");
-            var ip = C.Read();
-            if(ip != string.Empty)
-                Public.IPServer = IPAddress.Parse(ip);
-        }
-
         private async static void StopRestart()
         {
             Listener.Stop();
             C.Read();
             await Program.MainAsync(new string[0]);
         }
-
-        //Not Working On OS X
-        private async static Task<IPAddress> GetLocalIP() 
-        {
-            IPHostEntry host = await Dns.GetHostEntryAsync(Dns.GetHostName());
-            return host
-                   .AddressList
-                   .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
-        }
-
+        
         #endregion Private Functions
 
     }
