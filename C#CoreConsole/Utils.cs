@@ -34,26 +34,32 @@ namespace ConsoleApplication
             new Tuple<ConsoleColor,ConsoleColor>(ConsoleColor.Black, ConsoleColor.Blue)
         };
 
-        public static List<string> CS_keywords = new List<string>()
+        public static List<string> CS_Keywords = new List<string>()
         {
-            "abstract", "as", "async", 
+            "abstract", "as", "async", "await", 
             "base", "bool", "break", 
-            "case", "catch", "checked", "continue", "char",
-            "default", "delegate", "do", 
-            "else","event", "explicit", "extern",
-            "false", "finally", "fixed", "for", "foreach", 
-            "goto",
-            "if", "implicit", "in", "interface", "internal", "is", "int",
-            "lock", 
+            "case", "catch", "checked", "continue",
+            "char", "class", "const",
+            "default", "delegate", "decimal", "do", "double", 
+            "dynamic",
+            "else","event", "explicit", "extern", "enum",
+            "false", "finally", "fixed", "for", "foreach",
+            "float",
+            "goto", "get",
+            "if", "implicit", "in", "interface", "internal", 
+            "is", "int",
+            "lock", "long",
             "namespace", "new", "null", 
             "object", "operator", "out", "override", 
             "params","private", "protected", "public",
             "readonly", "ref", "return",
-            "sealed", "sizeof", "stackalloc", "static", "string", "switch",
+            "sealed", "sizeof", "stackalloc", "static", "string",
+            "switch", "sbyte", "short", "struct", "set",
             "this", "throw","true", "try", "typeof",
-            "unchecked", "unsafe", "using",
-            "virtual", "var", "void",
-            "while"
+            "unchecked", "unsafe", "using", "ushort", 
+            "virtual", "var", "void", "volatile",
+            "while",
+            "yield"
         };
 
 

@@ -91,7 +91,7 @@ namespace ConsoleApplication.Functions.Chat
             foreach(var word in listWords)
             {
                 var w = word.ToString().ToLower().Trim();
-                if(U.CS_keywords.Contains(w)) 
+                if(U.CS_Keywords.Contains(w)) 
                 {
                     message+=word+"(blue) ";
                 }
