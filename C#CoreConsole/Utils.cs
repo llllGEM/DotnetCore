@@ -62,7 +62,6 @@ namespace ConsoleApplication
             "yield"
         };
 
-
         public async static Task<bool> CheckEnvironementAsync()
         {
             var SysName = Environment.GetEnvironmentVariable("_system_name");
@@ -78,6 +77,9 @@ namespace ConsoleApplication
                    .AddressList
                    .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
         }  
+
+        public static Incrementer Incrementer = (int i, out int j) => { return j = i++; };// The Most Useless Function Ever
+        
     }
 
     public static class C //console alias
@@ -88,7 +90,6 @@ namespace ConsoleApplication
         public static Reader Read = Console.ReadLine;
         public static Key Key = Console.ReadKey;  
         public static Cursor Cursor = Console.SetCursorPosition;
-        public static Incrementer Incrementer = (int i, out int j) => { return j = i++; };// The Most Useless Function Ever
         
     }
 
@@ -97,28 +98,37 @@ namespace ConsoleApplication
         public async static Task CodeBlock(string message)
         {
             var listWords = Regex.Split(message, " ").ToList();
-            message="\n";
+            message = "\n"+listWords.FirstOrDefault()+" "; // username
+            C.Write(message);
+            listWords.Remove(listWords.FirstOrDefault());
             foreach(var word in listWords)
             {
                 if(word.ToLower().Contains("code")
                 || word.ToLower().Contains("-c")
                 || word.ToLower().Contains("```")) continue;
-                if(word.Contains("(blue)")) 
+                if(word.Contains("(keyword)")) 
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
-                    C.Write(word.Replace("(blue)", " "));
+                    C.Write(word.Replace("(keyword)", " "));
                     Console.ResetColor();
                 }
-                else if(word.Contains("(green)")) 
+                else if(word.Contains("(string)")) 
                 {
                     Console.ForegroundColor = await U.CheckEnvironementAsync() 
                                                     ? ConsoleColor.White // for my OSX console style
                                                     : ConsoleColor.Green;
-                    C.Write(word.Replace("(green)", " "));
+                    C.Write(word.Replace("(string)", " "));
+                    Console.ResetColor();
+                }
+                else if(word.Contains("(number)")) 
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    C.Write(word.Replace("(number)", " "));
                     Console.ResetColor();
                 }
                 else C.Write(word+" ");
             }
+            C.Write("     ");
         }
         
         public static void RemoteMessage(string message, Tuple<ConsoleColor,ConsoleColor> colorSet = null)
@@ -146,8 +156,8 @@ namespace ConsoleApplication
             var username = C.Read();
             C.WL("Press Enter Before To Write Something...");
             return username.Length > 0 
-                ? start+username.PadRight(U.NameLength,repeat)+end
-                : start+(Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
+                 ? start+username.PadRight(U.NameLength,repeat)+end
+                 : start+(Environment.MachineName + Environment.ProcessorCount).PadRight(U.NameLength,repeat)+end;
         }
 
         public static void AskPrivacy()

@@ -20,8 +20,7 @@ namespace ConsoleApplication.Functions.Chat
             var m = message.ToLower();
             if(m.Contains("code") || m.Contains("-c")|| m.Contains("```"))
             {
-                await SendCodeBlock(sender, message, server);
-                if(!server) SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{currentSocketUser}, message);
+                await SendCodeBlock(currentSocketUser, sender, message, server);
             }
             else if(m.Contains("users") || m.Contains("-u"))
             {
@@ -45,7 +44,9 @@ namespace ConsoleApplication.Functions.Chat
             else if(m.Contains("wizz") || m.Contains("-w"))
             {   // server can avoid beeing wized if seeEverything true  
                 if(!SocketChat.Public.SeeEverything) 
-                    if(!await U.CheckEnvironementAsync()) Wizz(message); 
+                    if(!await U.CheckEnvironementAsync()) 
+                        if(!SocketChat.StealthMode)
+                            Wizz(message); 
                 if(SocketChat.Public.SeeEverything) Display.RemoteMessage(message); //logs wizz in server not in history
                 await SendToEveryone(sender, message);
             }
@@ -79,33 +80,38 @@ namespace ConsoleApplication.Functions.Chat
             }
             else if(m.Contains("wizz") || m.Contains("-w"))
             {     
-                if(!await U.CheckEnvironementAsync()) Wizz(message);
+                if(!await U.CheckEnvironementAsync())
+                    if(!SocketChat.StealthMode) 
+                        Wizz(message);
             }
             else Display.RemoteMessage(message);
         }
 
-        private async static Task SendCodeBlock(TcpClient sender, string message, bool server)
+        private async static Task SendCodeBlock(SocketUser coder, TcpClient sender, string message, bool server)
         {
             var listWords = Regex.Split(message, " ").ToList();
-            message="\n";
+            message="\n"+listWords.FirstOrDefault()+" ";
+            listWords.Remove(listWords.FirstOrDefault());
             foreach(var word in listWords)
             {
                 var w = word.ToString().ToLower().Trim();
                 if(U.CS_Keywords.Contains(w)) 
-                {
-                    message+=word+"(blue) ";
-                }
-                else if(Regex.Match(word, "\\\"( *\\w* *)*\\\"").Success) // If is a representation of a string
-                {
-                    message+=word+"(green) ";
-                }
-                else message += word+" ";
+                    message+=word+"(keyword)";
+                else if(Regex.Match(word, "\"( *([\\w\\d\\s\\W\\D\\S])* *)*\"").Success // representation of a string with double quotes
+                      ||Regex.Match(word, "'( *([\\w\\d\\s\\W\\D\\S])* *)*'").Success) //single quotes
+                        message+=word+"(string)";
+                else if(Regex.Match(word, "\\d").Success)
+                        message+=word+"(number)";
+                else message += word;
+                message+= " ";
             }
             await SendToEveryone(sender, message);
             if(server) {
                 C.Cursor(0, Console.CursorTop-1); // replace the actual line
                 await Display.CodeBlock(message);
             }
+            else if(coder != null)
+                SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{coder}, message);
         }
 
         public static void StoreDisplayConnectedUsers(string message, string regex)
