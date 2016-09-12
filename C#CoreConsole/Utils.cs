@@ -19,7 +19,7 @@ namespace ConsoleApplication
 
     public static class U //Utils
     {
-        public static int GlobalPort = 1111;
+        public static int GlobalPort = 3333;
         public static int PrivatePort = 9999;
         public static int NameLength = 15;
         public static Parse<int> ParseInt = int.TryParse;
@@ -101,34 +101,59 @@ namespace ConsoleApplication
             message = "\n"+listWords.FirstOrDefault()+" "; // username
             C.Write(message);
             listWords.Remove(listWords.FirstOrDefault());
-            foreach(var word in listWords)
+            for(var i = 0; i < listWords.Count; i++)
             {
-                if(word.ToLower().Contains("code")
-                || word.ToLower().Contains("-c")
-                || word.ToLower().Contains("```")) continue;
-                if(word.Contains("(keyword)")) 
+                if(listWords[i].ToLower().Contains("code")
+                || listWords[i].ToLower().Contains("-c")
+                || listWords[i].ToLower().Contains("```")) continue;
+                if(listWords[i].Contains("(keyword)")) 
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
-                    C.Write(word.Replace("(keyword)", " "));
+                    C.Write(listWords[i].Replace("(keyword)", " "));
                     Console.ResetColor();
                 }
-                else if(word.Contains("(string)")) 
+                else if(listWords[i].Contains("\"")) 
                 {
-                    Console.ForegroundColor = await U.CheckEnvironementAsync() 
-                                                    ? ConsoleColor.White // for my OSX console style
-                                                    : ConsoleColor.Green;
-                    C.Write(word.Replace("(string)", " "));
+                    await SetStringColor();
+                    C.Write(listWords[i]);
+                    var next = " "+listWords[++i];
+                    while(!next.Contains("\""))
+                    {
+                        C.Write(next+" ");
+                        next = " "+listWords[++i];
+                    }
+                    C.Write(listWords[i].Replace("(string)", " "));
                     Console.ResetColor();
                 }
-                else if(word.Contains("(number)")) 
+                else if(listWords[i].Contains("'")) 
+                {
+                    await SetStringColor();
+                    C.Write(listWords[i]);
+                    var next = " "+listWords[++i];
+                    while(!next.Contains("'"))
+                    {
+                        C.Write(next+" ");
+                        next = " "+listWords[++i];
+                    }
+                    C.Write(listWords[i].Replace("(string)", " "));
+                    Console.ResetColor();
+                }
+                else if(listWords[i].Contains("(number)")) 
                 {
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    C.Write(word.Replace("(number)", " "));
+                    C.Write(listWords[i].Replace("(number)", " "));
                     Console.ResetColor();
                 }
-                else C.Write(word+" ");
+                else C.Write(listWords[i]+" ");
             }
-            C.Write("     ");
+            C.Write("      ");
+        }
+
+        private async static Task SetStringColor()
+        {
+            Console.ForegroundColor = await U.CheckEnvironementAsync() 
+                                                    ? ConsoleColor.White // for my OSX console style
+                                                    : ConsoleColor.Green;
         }
         
         public static void RemoteMessage(string message, Tuple<ConsoleColor,ConsoleColor> colorSet = null)

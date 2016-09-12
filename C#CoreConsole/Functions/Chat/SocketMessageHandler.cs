@@ -20,7 +20,7 @@ namespace ConsoleApplication.Functions.Chat
             var m = message.ToLower();
             if(m.Contains("code") || m.Contains("-c")|| m.Contains("```"))
             {
-                await SendCodeBlock(currentSocketUser, sender, message, server);
+                await SendCodeBlock(currentSocketUser, sender, message);
             }
             else if(m.Contains("users") || m.Contains("-u"))
             {
@@ -87,9 +87,9 @@ namespace ConsoleApplication.Functions.Chat
             else Display.RemoteMessage(message);
         }
 
-        private async static Task SendCodeBlock(SocketUser coder, TcpClient sender, string message, bool server)
+        private async static Task SendCodeBlock(SocketUser coder, TcpClient sender, string message)
         {
-            var listWords = Regex.Split(message, " ").ToList();
+            var listWords = message.Split(' ').ToList();
             message="\n"+listWords.FirstOrDefault()+" ";
             listWords.Remove(listWords.FirstOrDefault());
             foreach(var word in listWords)
@@ -97,21 +97,54 @@ namespace ConsoleApplication.Functions.Chat
                 var w = word.ToString().ToLower().Trim();
                 if(U.CS_Keywords.Contains(w)) 
                     message+=word+"(keyword)";
-                else if(Regex.Match(word, "\"( *([\\w\\d\\s\\W\\D\\S])* *)*\"").Success // representation of a string with double quotes
-                      ||Regex.Match(word, "'( *([\\w\\d\\s\\W\\D\\S])* *)*'").Success) //single quotes
-                        message+=word+"(string)";
                 else if(Regex.Match(word, "\\d").Success)
                         message+=word+"(number)";
                 else message += word;
                 message+= " ";
             }
-            await SendToEveryone(sender, message);
-            if(server) {
-                C.Cursor(0, Console.CursorTop-1); // replace the actual line
-                await Display.CodeBlock(message);
-            }
-            else if(coder != null)
-                SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{coder}, message);
+            string formattedMessage;
+            CheckForCodeStrings(message, out formattedMessage);
+            await SendToEveryone(sender, formattedMessage);
+            C.Cursor(0, Console.CursorTop-2); // replace the actual line
+            await Display.CodeBlock(formattedMessage);// display in server
+            if(coder != null)
+                SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{coder}, formattedMessage);
+            SocketChat.Public.History.Add(formattedMessage);
+        }
+
+        private static string CheckForCodeStrings(string message, out string messageChecked)
+        {
+            var listStrings = message.Split(' ').ToList();
+            messageChecked = "";
+            for(var i =0 ; i < listStrings.Count; i++)
+                if(listStrings[i].Contains("\"")){
+                    messageChecked += listStrings[i]+" ";
+                    do{
+                        var next = listStrings[++i];
+                        if(next.Contains("\""))
+                        {
+                            messageChecked+=next+"(string) ";
+                            break;
+                        }
+                        else messageChecked+=next+" ";
+                    }
+                    while(true);
+                }
+                else if(listStrings[i].Contains("'")){
+                        messageChecked += listStrings[i]+" ";
+                        do{
+                            var next = listStrings[++i];
+                            if(next.Contains("'"))
+                            {
+                                messageChecked+=next+"(string) ";
+                                break;
+                            }
+                            else messageChecked+=next+" ";
+                        }
+                        while(true);
+                }
+                else messageChecked+= listStrings[i]+" ";
+            return messageChecked;
         }
 
         public static void StoreDisplayConnectedUsers(string message, string regex)
