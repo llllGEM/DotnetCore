@@ -54,15 +54,16 @@ namespace ConsoleApplication
             Task.Factory.StartNew(() => {
                 //string bar = "Arretez de regarder le titre bande de cons";
                 //string[] icon = new string[4]{"| ", "/ ", "--", "\\ "};
-                string[] dots = new string[4]{".   ", "..  ", "... ", "...."};
+                //string[] dots = new string[4]{".   ", "..  ", "... ", "...."};
+                string[] node = new string[10]{"⡇","⠇","⠏","⠛","⠹","⠸","⢸","⣰","⣤","⣆"};
                 string title = "";
                 while (true){
-                    for(int i = 0; i< dots.Length; i++){
+                    for(int i = 0; i< node.Length; i++){
                             //title += bar[i];
                             //title = icon[i].ToString();;
-                            title = "Running "+dots[i];
+                            title = "Running "+node[i];
                             Console.Title = title;
-                            Thread.Sleep(150);
+                            Thread.Sleep(50);
                     }
                     //title="";
             }}, cts.Token);

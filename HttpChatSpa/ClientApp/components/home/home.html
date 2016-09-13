@@ -1,0 +1,45 @@
+<!--<h1>Hello, world!</h1>
+<p>Welcome to single-page HttpChat, built with:</p>
+<ul>
+    <li><a href='https://get.asp.net/'>ASP.NET Core</a> and <a href='https://msdn.microsoft.com/en-us/library/67ef8sbd.aspx'>C#</a> for cross-platform server-side code</li>
+    <li><a href='https://angular.io/'>Angular 2</a> and <a href='http://www.typescriptlang.org/'>TypeScript</a> for client-side code</li>
+    <li><a href='https://webpack.github.io/'>Webpack</a> for building and bundling client-side resources</li>
+    <li><a href='http://getbootstrap.com/'>Bootstrap</a> for layout and styling</li>
+</ul>
+<p>Also set up:</p>
+<ul>
+    <li><strong>Client-side navigation</strong>. For example, click <em>Counter</em> then <em>Back</em> to return here.</li>
+    <li><strong>Server-side prerendering</strong>. For faster initial loading and improved SEO, my Angular 2 app is prerendered on the server. The resulting HTML is then transferred to the browser where a client-side copy of the app takes over.</li>
+    <li><strong>Webpack dev middleware</strong>. In development mode, there's no need to run the <code>webpack</code> build tool. client-side resources are dynamically built on demand. Updates are available as soon as any file is modified.</li>
+    <li><strong>Hot module replacement</strong>. In development mode, don't even need to reload the page after making most changes. Within seconds of saving changes to files, the app will be rebuilt and a new instance is injected into the page.</li>
+</ul>-->
+<div class="chat_window">
+    <div class="top_menu">
+        <div class="buttons">
+            <div class="button close"></div>
+            <div class="button minimize"></div>
+            <div class="button maximize"></div>
+        </div>
+        <div class="title">Chat</div>
+    </div>
+        <ul class="messages"> </ul>
+            
+        <div class="bottom_wrapper clearfix">
+            <div class="message_input_wrapper">
+                <input class="message_input" placeholder="Type your message here..." />
+            </div>
+            <div class="send_message">
+                <div class="icon"></div>
+                <div class="text">Send</div>
+            </div>
+        </div>
+</div>
+
+<div class="message_template">
+    <li class="message">
+        <div class="avatar"></div>
+        <div class="text_wrapper">
+            <div class="text"></div>
+        </div>
+    </li>
+</div>

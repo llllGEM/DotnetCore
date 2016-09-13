@@ -38,6 +38,7 @@ namespace ConsoleApplication.Functions.Chat
             foreach(var user in SocketChat.Public.Users)
                 if(user.Client.Connected)
                     await user.Client.GetStream().WriteAsync(compressedBytes, 0, compressedBytes.Length);
+            Program.ProgressBar(false, ConsoleColor.DarkGreen, "File Transferred");
             return;
         }
 
@@ -46,12 +47,13 @@ namespace ConsoleApplication.Functions.Chat
             if(transmitter != null){
                 C.WL("Enter File Extension...");
                 var extention = C.Read().Trim().Replace(".", "");
-                C.WL("Enter Where You Want to Store the File (Full Path");
+                C.WL("Enter Where You Want to Store the File (Full Path)...");
                 var path = C.Read().Trim();
                 var fileBytes = new byte[transmitter.SendBufferSize];
                 await transmitter.GetStream().ReadAsync(fileBytes, 0,fileBytes.Length);
                 var decompressedBytes = Decompress(fileBytes);
                 File.WriteAllBytes($"{path}FileTransmitted@You.{extention}", fileBytes);
+                Program.ProgressBar(false, ConsoleColor.DarkGreen, "File Received & Beeing Written or Saved");
             }
             return;
         }
