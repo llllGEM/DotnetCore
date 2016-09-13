@@ -19,7 +19,8 @@ namespace ConsoleApplication
 
     public static class U //Utils
     {
-        public static int GlobalPort = 3333;
+        public static bool OSX = false;
+        public static int GlobalPort = 7777;
         public static int PrivatePort = 9999;
         public static int NameLength = 15;
         public static Parse<int> ParseInt = int.TryParse;
@@ -40,7 +41,7 @@ namespace ConsoleApplication
             "base", "bool", "break", 
             "case", "catch", "checked", "continue",
             "char", "class", "const",
-            "default", "delegate", "decimal", "do", "double", 
+            "default", "delegate", "decimal", "do", "double",
             "dynamic",
             "else","event", "explicit", "extern", "enum",
             "false", "finally", "fixed", "for", "foreach",
@@ -65,9 +66,9 @@ namespace ConsoleApplication
         public async static Task<bool> CheckEnvironementAsync()
         {
             var SysName = Environment.GetEnvironmentVariable("_system_name");
-            bool b = SysName == "OSX";
-            SocketChat.Public.IPServer = b ? IPAddress.Any : await GetLocalIPAsync();
-            return b;
+            U.OSX = SysName == "OSX";
+            SocketChat.Public.IPServer = U.OSX ? IPAddress.Any : await GetLocalIPAsync();
+            return U.OSX;
         }      
 
         public async static Task<IPAddress> GetLocalIPAsync() 
@@ -95,7 +96,7 @@ namespace ConsoleApplication
 
     public static class Display
     {
-        public async static Task CodeBlock(string message)
+        public static void CodeBlock(string message)
         {
             var listWords = Regex.Split(message, " ").ToList();
             message = "\n"+listWords.FirstOrDefault()+" "; // username
@@ -114,7 +115,7 @@ namespace ConsoleApplication
                 }
                 else if(listWords[i].Contains("\"")) 
                 {
-                    await SetStringColor();
+                    SetStringColor();
                     C.Write(listWords[i]);
                     var next = " "+listWords[++i];
                     while(!next.Contains("\""))
@@ -127,7 +128,7 @@ namespace ConsoleApplication
                 }
                 else if(listWords[i].Contains("'")) 
                 {
-                    await SetStringColor();
+                    SetStringColor();
                     C.Write(listWords[i]);
                     var next = " "+listWords[++i];
                     while(!next.Contains("'"))
@@ -149,28 +150,30 @@ namespace ConsoleApplication
             C.Write("      ");
         }
 
-        private async static Task SetStringColor()
+        private static void SetStringColor()
         {
-            Console.ForegroundColor = await U.CheckEnvironementAsync() 
-                                                    ? ConsoleColor.White // for my OSX console style
-                                                    : ConsoleColor.Green;
+            Console.ForegroundColor = U.OSX 
+                                      ? ConsoleColor.White // for my OSX console style
+                                      : ConsoleColor.Green;
         }
         
         public static void RemoteMessage(string message, Tuple<ConsoleColor,ConsoleColor> colorSet = null)
         {
             if(colorSet == null)colorSet = U.Colors[new Random().Next(0,U.Colors.Length)];
+            if(SocketChat.StealthMode) colorSet = U.Colors[0]; // no colors not to be spotted
             Console.BackgroundColor = colorSet.Item1;
             Console.ForegroundColor = colorSet.Item2;
             C.WL("\n"+message);
             Console.ResetColor();
         }
 
-        public async static Task ReceiptAsync()
+        public static void Receipt()
         {
-            Console.ForegroundColor = await U.CheckEnvironementAsync() 
-                                            ? ConsoleColor.White 
-                                            : ConsoleColor.Green;
-            C.Write(" ⓥ");
+            Console.ForegroundColor = U.OSX 
+                                      ? ConsoleColor.White 
+                                      : ConsoleColor.Green;
+            if(U.OSX)C.Write(" ⓥ");
+            else C.Write(" v");
             Console.ResetColor();
         }
 

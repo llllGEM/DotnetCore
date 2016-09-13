@@ -90,9 +90,9 @@ namespace ConsoleApplication
 
         public static void EndTasks()
         {
-            try{cts?.Cancel(false);}//cancel all tasks without ending process
+            try{ cts?.Cancel(false); }//cancel all tasks without ending process
             catch(Exception){}
-            finally{cts?.Dispose();}
+            finally{ cts?.Dispose(); }
             Console.ResetColor();Console.Clear();
         }
     }

@@ -20,7 +20,7 @@ namespace ConsoleApplication.Functions.Chat
             var m = message.ToLower();
             if(m.Contains("code") || m.Contains("-c")|| m.Contains("```"))
             {
-                await SendCodeBlock(currentSocketUser, sender, message);
+                await SendCodeBlock(currentSocketUser, sender, message, server);
             }
             else if(m.Contains("users") || m.Contains("-u"))
             {
@@ -37,57 +37,52 @@ namespace ConsoleApplication.Functions.Chat
                 try{ SendToTarget(currentSocketUser, usernames,message); }
                 catch(Exception){} 
             }
-            else if(m.Contains("file") || m.Contains("-f"))
-            {
-                //TODO handle file transfer
-            }
             else if(m.Contains("wizz") || m.Contains("-w"))
             {   // server can avoid beeing wized if seeEverything true  
                 if(!SocketChat.Public.SeeEverything) 
-                    if(!await U.CheckEnvironementAsync()) 
+                    if(!U.OSX) 
                         if(!SocketChat.StealthMode)
                             Wizz(message); 
                 if(SocketChat.Public.SeeEverything) Display.RemoteMessage(message); //logs wizz in server not in history
                 await SendToEveryone(sender, message);
             }
             else{ //simple broadcast message
-               if(!server) Display.RemoteMessage(message); // display local
-               await SendToEveryone(sender, message);
-               SocketChat.Public.History.Add(message);// add message to history
+                try{
+                    if(!server) Display.RemoteMessage(message); // display local
+                    await SendToEveryone(sender, message);
+                    SocketChat.Public.History.Add(message);// add message to history
+                }
+                catch(Exception e){C.WL(e.Message);}
             }
 
             SendReceiptTo(sender);
         }
         
-        public async static void ClientSide(string message)
+        public static void ClientSide(string message)
         {
             var m = message.ToLower();
             if(message.Contains("ⓥ"))
             {
-                await Display.ReceiptAsync();
+                Display.Receipt();
             }
             else if(m.Contains("code") || m.Contains("-c"))
             {
-                await Display.CodeBlock(message); // dislay colored code
+                Display.CodeBlock(message); // dislay colored code
             }
             else if(m.Contains("users") || m.Contains("-u"))
             {
                StoreDisplayConnectedUsers(message, UserRegex);
             }
-            else if(m.Contains("file") || m.Contains("-f"))
-            {
-                //TODO handle file transfer
-            }
             else if(m.Contains("wizz") || m.Contains("-w"))
             {     
-                if(!await U.CheckEnvironementAsync())
+                if(!U.OSX)
                     if(!SocketChat.StealthMode) 
                         Wizz(message);
             }
             else Display.RemoteMessage(message);
         }
 
-        private async static Task SendCodeBlock(SocketUser coder, TcpClient sender, string message)
+        private async static Task SendCodeBlock(SocketUser coder, TcpClient sender, string message, bool server)
         {
             var listWords = message.Split(' ').ToList();
             message="\n"+listWords.FirstOrDefault()+" ";
@@ -105,8 +100,8 @@ namespace ConsoleApplication.Functions.Chat
             string formattedMessage;
             CheckForCodeStrings(message, out formattedMessage);
             await SendToEveryone(sender, formattedMessage);
-            C.Cursor(0, Console.CursorTop-2); // replace the actual line
-            await Display.CodeBlock(formattedMessage);// display in server
+            if(server)C.Cursor(0, Console.CursorTop-2); // replace the actual line server side
+            Display.CodeBlock(formattedMessage);// display in server
             if(coder != null)
                 SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{coder}, formattedMessage);
             SocketChat.Public.History.Add(formattedMessage);
@@ -150,8 +145,8 @@ namespace ConsoleApplication.Functions.Chat
         public static void StoreDisplayConnectedUsers(string message, string regex)
         {
             var tab = Regex.Split(message, regex)
-                            .Where(s => Regex.Match(s, regex).Success)
-                            .ToList();
+                           .Where(s => Regex.Match(s, regex).Success)
+                           .ToList();
             if(!(tab.Count>0)) return;                
             ClientSideConnectedUsers = tab;
             var tab2 = Regex.Split(message, regex).ToList();
@@ -271,26 +266,6 @@ namespace ConsoleApplication.Functions.Chat
                             targetsList = targets.ToList();
                             break;
                         }
-                        if(name.Trim(toTrim).ToLower().Contains("file"))
-                        {
-                            exept = true;
-                            var tab = Regex.Split(message, UserRegex).ToList();
-                            message ="\n";
-                            foreach(string s in tab.ToList())
-                            {
-                                if(s.ToLower().Trim() == "@" || s.ToLower().Trim() == "-t"|| s.ToLower().Trim() == "target"){
-                                    message += "***Wants To Send a File***";
-                                    continue;
-                                }
-                                if(s.ToLower().Trim(toTrim) == name.ToLower().Trim(toTrim)){
-                                    targetsList.Add(user);
-                                    continue;
-                                } 
-                                message += s;
-
-                                //TODO finish file transfering
-                            }
-                        }
                     if(exept) break;
                     }
                 if(exept) break;
@@ -304,11 +279,13 @@ namespace ConsoleApplication.Functions.Chat
         {
             for(int i = 0; i<=10; i++)
             {
-                Console.Beep();
-                Console.WindowWidth += 10;
-                Console.WindowHeight += 10;
-                Console.WindowWidth -= 10;
-                Console.WindowHeight -= 10;
+                if(!U.OSX)
+                    Console.Beep(37+i, 100);
+                else Console.Beep();
+                Console.WindowWidth += 5;
+                Console.WindowHeight += 2;
+                Console.WindowWidth -= 5;
+                Console.WindowHeight -= 2;
             }
             var tab = Regex.Split(message, UserRegex).ToList();
             message ="";
@@ -316,6 +293,7 @@ namespace ConsoleApplication.Functions.Chat
             {
                 if(s.ToLower().Trim() == "-w" || s.ToLower().Trim() == "wizz" ){
                     message += "***Wizz***";
+                    continue;
                 }
                 message += s;
             }
