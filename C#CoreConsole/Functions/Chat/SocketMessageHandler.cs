@@ -20,7 +20,10 @@ namespace ConsoleApplication.Functions.Chat
             var m = message.ToLower();
             if(m.Contains("code") || m.Contains("-c")|| m.Contains("```"))
             {
-                await SendCodeBlock(currentSocketUser, sender, message, server);
+                try{
+                    await SendCodeBlock(currentSocketUser, sender, message, server);
+                }
+                catch(Exception){}
             }
             else if(m.Contains("users") || m.Contains("-u"))
             {
@@ -83,7 +86,7 @@ namespace ConsoleApplication.Functions.Chat
         }
 
         private async static Task SendCodeBlock(SocketUser coder, TcpClient sender, string message, bool server)
-        {
+         {
             var listWords = message.Split(' ').ToList();
             message="\n"+listWords.FirstOrDefault()+" ";
             listWords.Remove(listWords.FirstOrDefault());
@@ -103,7 +106,7 @@ namespace ConsoleApplication.Functions.Chat
             if(server)C.Cursor(0, Console.CursorTop-2); // replace the actual line server side
             Display.CodeBlock(formattedMessage);// display in server
             if(coder != null)
-                SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{coder}, formattedMessage);
+                SocketChat.Public.ServerBroadCastSpecific(new List<SocketUser>{coder}, formattedMessage);
             SocketChat.Public.History.Add(formattedMessage);
         }
 
@@ -183,11 +186,13 @@ namespace ConsoleApplication.Functions.Chat
         private static void SendConnectedUsers(TcpClient requester, bool server)
         {
             var message = "users ";
-            foreach (var user in SocketChat.Public.Users.Where(u => u.Client != requester)) 
+            foreach (var user in SocketChat.Public.Users?.Where(u => u.Client != requester)) 
                 message += user.Username+"\n";
             var target = SocketChat.Public.Users.Where(u => u.Client == requester).FirstOrDefault();
-            SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{target}, message);
-            if(server) Display.RemoteMessage(message);
+            if(target != null)
+                SocketChat.Public.ServerBroadCastSpecific(new List<SocketUser>{target}, message);
+            if(server) 
+                Display.RemoteMessage(message);
         }
 
         private static void SendChatHistory(TcpClient requester)
@@ -195,8 +200,9 @@ namespace ConsoleApplication.Functions.Chat
             string previousMessages="\n";
             foreach(var previousMessage in SocketChat.Public.History) 
                 previousMessages += previousMessage+"\n";
-            var target = SocketChat.Public.Users.Where(u => u.Client == requester).FirstOrDefault();
-            SocketChat.Public.ServerBroadCastSpecificAsync(new List<SocketUser>{target}, previousMessages);
+            var target = SocketChat.Public.Users?.Where(u => u.Client == requester).FirstOrDefault();
+            if(target != null)
+            SocketChat.Public.ServerBroadCastSpecific(new List<SocketUser>{target}, previousMessages);
         }
 
         private async static void SendReceiptTo(TcpClient sender)
@@ -272,7 +278,7 @@ namespace ConsoleApplication.Functions.Chat
                 }
 
             if(targetsList.Count>0)
-                SocketChat.Public.ServerBroadCastSpecificAsync(targetsList, message);
+                SocketChat.Public.ServerBroadCastSpecific(targetsList, message);
         }
 
         public static void Wizz(string message)

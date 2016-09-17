@@ -23,7 +23,7 @@ namespace ConsoleApplication.Functions.Chat
             var filePath = C.Read().Trim();
             FileStream fs;
             try{ fs = File.OpenRead(filePath); }
-            catch(Exception){ return; }
+            catch(Exception e ){ C.WL(e.Message); return; }
             byte[] fileBytes;
             using (MemoryStream ms = new MemoryStream())
             {

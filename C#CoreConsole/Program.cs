@@ -3,6 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using ConsoleApplication.Functions.Randomizer;
 using ConsoleApplication.Functions.Chat;
+using System.Diagnostics;
+using System.IO;
 
 namespace ConsoleApplication
 {       
@@ -22,13 +24,15 @@ namespace ConsoleApplication
         {
             try{
                 int nb;
-                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: Randomizer");   
+                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: HttpChat \n\n 3: Randomizer");   
                 if(!U.ParseInt(C.Read(), out nb)) {await MainAsync(args);EndTasks();}
                 else
                 switch(nb){
                         case 1: SocketChat.Begin(cts.Token);
                                 break;
-                        case 2: Randomizer.Randomize();
+                        case 2: LauncHttpChatServer();
+                                break;
+                        case 3: Randomizer.Randomize();
                                 break;
                         default: SocketChat.Begin(cts.Token);
                                  Console.Clear();
@@ -37,6 +41,15 @@ namespace ConsoleApplication
             }
             catch(Exception){}
             finally{EndTasks();}
+        }
+
+        public static void LauncHttpChatServer()
+        {
+            ProcessStartInfo psi = new ProcessStartInfo("dotnet");
+            psi.WorkingDirectory = "../Chat";
+            psi.Arguments = "run";
+            Process p = Process.Start(psi);
+            p.WaitForExit();
         }
         
         public static void ConsoleInit(){
@@ -49,7 +62,6 @@ namespace ConsoleApplication
            \____/ /_//_/  \____/\____/_/   \___/\____/\____/_/ /_/____/\____/_/\___/ 
                                                                                     ");
             //Console.TreatControlCAsInput = true; //to suppress ctrl + C...
-            Console.Beep();
             cts = new CancellationTokenSource();
             Task.Factory.StartNew(() => {
                 //string bar = "Arretez de regarder le titre bande de cons";

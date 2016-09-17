@@ -118,8 +118,6 @@
 "/Users/MacnDevin/Documents/myGit/C#CoreConsole/Data/DbContext.cs"
 "/Users/MacnDevin/Documents/myGit/C#CoreConsole/Data/Session.cs"
 "/Users/MacnDevin/Documents/myGit/C#CoreConsole/Data/Vote.cs"
-"/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/HttpChat.cs"
-"/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/HttpUser.cs"
 "/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/SocketChat.cs"
 "/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/SocketFileHandler.cs"
 "/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/SocketMessageHandler.cs"

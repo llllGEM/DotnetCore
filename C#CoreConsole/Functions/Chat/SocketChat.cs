@@ -155,7 +155,7 @@ namespace ConsoleApplication.Functions.Chat
                 }, ct);
             }
 
-            public static void ServerBroadCastSpecificAsync(List<SocketUser> Users,string message, string file = null)
+            public static void ServerBroadCastSpecific(List<SocketUser> Users,string message, string file = null)
             {   
                 var b = Encoding.UTF8.GetBytes(message);
                 foreach(var user in Users)
@@ -258,10 +258,11 @@ namespace ConsoleApplication.Functions.Chat
                     await client.GetStream().ReadAsync(bytes,0,bytes.Length);
                     var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
                     if(!StealthMode)
-                        foreach(var s in Regex.Split(message,"(\\0)+"))
+                        foreach(var s in Regex.Split(message,"(\\0)+")){
+                            Display.RemoteMessage(s);
                             if(s == string.Empty) continue;
                             else if(Regex.Match(s, "(\\0)+").Success) continue;
-                            else { SocketMessageHandler.ClientSide(message); break;}
+                            else { SocketMessageHandler.ClientSide(message); break;}}
                     else  SocketMessageHandler.ClientSide(message);
                 }
             }, ct);
