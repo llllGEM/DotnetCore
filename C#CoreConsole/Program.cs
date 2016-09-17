@@ -46,7 +46,7 @@ namespace ConsoleApplication
         public static void LauncHttpChatServer()
         {
             ProcessStartInfo psi = new ProcessStartInfo("dotnet");
-            psi.WorkingDirectory = "../Chat";
+            psi.WorkingDirectory = "../HttpChat";
             psi.Arguments = "run";
             Process p = Process.Start(psi);
             p.WaitForExit();

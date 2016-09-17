@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/bin/Debug/netcoreapp1.0/Chat.dll",
+            "program": "${workspaceRoot}/bin/Debug/netcoreapp1.0/HttpChat.dll",
             "args": [],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
