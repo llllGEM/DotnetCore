@@ -285,9 +285,7 @@ namespace ConsoleApplication.Functions.Chat
         {
             for(int i = 0; i<=10; i++)
             {
-                if(!U.OSX)
-                    Console.Beep(37+i, 100);
-                else Console.Beep();
+                Console.Beep(37+i, 100);
                 Console.WindowWidth += 5;
                 Console.WindowHeight += 2;
                 Console.WindowWidth -= 5;

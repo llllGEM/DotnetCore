@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using ConsoleApplication.Functions.Randomizer;
 using ConsoleApplication.Functions.Chat;
 using System.Diagnostics;
-using System.IO;
+using ConsoleApplication.Functions.Matrix;
 
 namespace ConsoleApplication
 {       
@@ -17,16 +17,15 @@ namespace ConsoleApplication
         {
             ConsoleInit();
             Task.Factory.StartNew(async() => await MainAsync(args), cts.Token).Wait();
-            //GlobalResetEvent.WaitOne();
         }
 
         public static async Task MainAsync(string[] args) 
         {
             try{
                 int nb;
-                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: HttpChat \n\n 3: Randomizer");   
-                if(!U.ParseInt(C.Read(), out nb)) {await MainAsync(args);EndTasks();}
-                else
+                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: HttpChat \n\n 3: Randomizer \n\n 4: Matrix"); 
+                if(args.Length > 0){ U.ParseInt(args[0], out nb); Console.Clear(); }
+                else if( !U.ParseInt(C.Read(), out nb)) { await MainAsync(args); }
                 switch(nb){
                         case 1: SocketChat.Begin(cts.Token);
                                 break;
@@ -34,13 +33,15 @@ namespace ConsoleApplication
                                 break;
                         case 3: Randomizer.Randomize();
                                 break;
+                        case 4: Matrix.start(cts.Token);
+                                break;
                         default: SocketChat.Begin(cts.Token);
                                  Console.Clear();
                                  break;
                 }
             }
-            catch(Exception){}
-            finally{EndTasks();}
+            catch( Exception ){}
+            finally{ GlobalResetEvent.WaitOne();EndTasks(); }
         }
 
         public static void LauncHttpChatServer()
@@ -64,21 +65,17 @@ namespace ConsoleApplication
             //Console.TreatControlCAsInput = true; //to suppress ctrl + C...
             cts = new CancellationTokenSource();
             Task.Factory.StartNew(() => {
-                //string bar = "Arretez de regarder le titre bande de cons";
-                //string[] icon = new string[4]{"| ", "/ ", "--", "\\ "};
-                //string[] dots = new string[4]{".   ", "..  ", "... ", "...."};
-                string[] node = new string[10]{"⡇","⠇","⠏","⠛","⠹","⠸","⢸","⣰","⣤","⣆"};
-                string title = "";
-                while (true){
-                    for(int i = 0; i< node.Length; i++){
-                            //title += bar[i];
-                            //title = icon[i].ToString();;
-                            title = "Running "+node[i];
-                            Console.Title = title;
-                            Thread.Sleep(50);
-                    }
-                    //title="";
-            }}, cts.Token);
+                string[] icon = new string[4]{"| ", "/ ", "--", "\\ "};
+                string[] dots = new string[4]{".   ", "..  ", "... ", "...."};
+                string[] myNode = new string[10]{"⡇","⠇","⠏","⠛","⠹","⠸","⢸","⣰","⣤","⣆"};
+                string[] node = new string[6]{"⠧","⠏","⠛","⠹","⠼","⠶"};
+                string[] bars = new string[15]{"▏","▎","▍","▌","▋","▊","▉","█","▇","▆","▅","▄","▃","▂","▁"};
+                string[] angles = new string[4]{"◣","◤","◥","◢"};
+                string[] moons = new string[4]{"◐","◓","◑","◒"};
+                string[] rectangles = new string[4]{"▙","▛","▜","▟"};
+                SetConsoleTitle(myNode);
+            }, cts.Token);
+
             Console.CancelKeyPress += (sender, e) => {
                 //e.Cancel = true; 
                 SocketChat.Listener?.Stop(); // stop listener if socketChat launched in case of control + C
@@ -88,13 +85,25 @@ namespace ConsoleApplication
             };
         }
         
+        private static void SetConsoleTitle(string[] pattern)
+        {
+            string title = "";
+            while (true){
+                for(int i = 0; i< pattern.Length; i++){
+                        title = "Running "+pattern[i];
+                        Console.Title = title;
+                        Thread.Sleep(50);
+                }
+            }
+        }
+
         public static void ProgressBar(bool clear = true, ConsoleColor color = ConsoleColor.Green, string text = "")
         {
             Console.BackgroundColor = color;
             Console.ForegroundColor = ConsoleColor.Black;
             for(int i = 0; i <= Console.WindowWidth; i++){
                Console.Write(text.PadRight(i));
-               Thread.Sleep(5);
+               Thread.Sleep(1);
                Console.SetCursorPosition(0,0);
             }
             Console.ResetColor();
@@ -104,7 +113,7 @@ namespace ConsoleApplication
         public static void EndTasks()
         {
             try{ cts?.Cancel(false); }//cancel all tasks without ending process
-            catch(Exception){}
+            catch( Exception ){}
             finally{ cts?.Dispose(); }
             Console.ResetColor();Console.Clear();
         }

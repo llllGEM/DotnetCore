@@ -21,18 +21,13 @@ namespace ConsoleApplication.Functions.Chat
         {
             C.WL("Enter Path to File...");
             var filePath = C.Read().Trim();
-            FileStream fs;
-            try{ fs = File.OpenRead(filePath); }
-            catch(Exception e ){ C.WL(e.Message); return; }
             byte[] fileBytes;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                fs.CopyTo(ms);
-                fileBytes = ms.ToArray();
-            }
+            try{ fileBytes = File.ReadAllBytes(filePath); }
+            catch(Exception e ){ C.WL(e.Message); return; }
             var compressedBytes = Compress(fileBytes);
             if(receiver != null){
-                await receiver.GetStream().WriteAsync(compressedBytes, 0, compressedBytes.Length);
+                if(receiver.Connected)
+                    await receiver.GetStream().WriteAsync(compressedBytes, 0, compressedBytes.Length);
                 return;
             }
             foreach(var user in SocketChat.Public.Users)
@@ -46,13 +41,14 @@ namespace ConsoleApplication.Functions.Chat
         {
             if(transmitter != null){
                 C.WL("Enter File Extension...");
-                var extention = C.Read().Trim().Replace(".", "");
+                var extention = C.Read().Trim().Replace(".", "").ToLower();
                 C.WL("Enter Where You Want to Store the File (Full Path)...");
                 var path = C.Read().Trim();
+                if(path == string.Empty) path = Directory.GetCurrentDirectory();
                 var fileBytes = new byte[transmitter.SendBufferSize];
                 await transmitter.GetStream().ReadAsync(fileBytes, 0,fileBytes.Length);
                 var decompressedBytes = Decompress(fileBytes);
-                File.WriteAllBytes($"{path}FileTransmitted@You.{extention}", fileBytes);
+                File.WriteAllBytes($"{path}/{Path.GetRandomFileName()}.{extention}", fileBytes);
                 Program.ProgressBar(false, ConsoleColor.DarkGreen, "File Received & Beeing Written or Saved");
             }
             return;

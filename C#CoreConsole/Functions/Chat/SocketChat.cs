@@ -124,7 +124,6 @@ namespace ConsoleApplication.Functions.Chat
                     var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
                     if(!StealthMode)
                         foreach(var s in Regex.Split(message,"(\\0)+")){
-                            C.WL(s);
                             if(s == string.Empty) continue;
                             else if(s == " ") continue;
                             else if(Regex.Match(s, "(\\0)+").Success) continue;
@@ -144,13 +143,14 @@ namespace ConsoleApplication.Functions.Chat
                         if(ManageInput(serverUsername, out firstChar, server: true)){
                             var inputUser = firstChar+C.Read().Trim();
                             if(inputUser.ToLower().Contains("file")) 
-                                SocketFileHandler.Start(null).Wait();
+                                try{
+                                    await SocketFileHandler.Start(null);
+                                }catch(Exception){}
                             var message = serverUsername+inputUser;
                             C.Cursor(message.Length, Console.CursorTop-1); //don't show Enter pressed
                             await SocketMessageHandler.ServerSide(new TcpClient(), message, true);
                             if(Users.Where(u => u.Client.Connected).Count() > 0)
                                 Display.Receipt();
-                            History.Add(serverUsername+message); //Add to History
                         }
                 }, ct);
             }
@@ -232,14 +232,16 @@ namespace ConsoleApplication.Functions.Chat
         
         private static Task SendAsync(TcpClient client, CancellationToken ct, string username)
         {
-            return Task.Factory.StartNew(()=>
+            return Task.Factory.StartNew(async ()=>
             {
                 string firstPart = "";
                 while(true)
                     if(ManageInput(username, out firstPart)){
                         var inputUser = firstPart+C.Read().Trim();
                         if(inputUser.ToLower().Contains("file"))
-                            SocketFileHandler.Start(client).Wait();
+                            try{    
+                                await SocketFileHandler.Start(client);
+                            }catch(Exception){}
                         var message = username+inputUser;
                         var b = Encoding.UTF8.GetBytes(message);
                         C.Cursor(message.Length, Console.CursorTop-1); //don't show Enter pressed
@@ -259,7 +261,6 @@ namespace ConsoleApplication.Functions.Chat
                     var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
                     if(!StealthMode)
                         foreach(var s in Regex.Split(message,"(\\0)+")){
-                            Display.RemoteMessage(s);
                             if(s == string.Empty) continue;
                             else if(Regex.Match(s, "(\\0)+").Success) continue;
                             else { SocketMessageHandler.ClientSide(message); break;}}
