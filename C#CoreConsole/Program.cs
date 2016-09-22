@@ -5,6 +5,7 @@ using ConsoleApplication.Functions.Randomizer;
 using ConsoleApplication.Functions.Chat;
 using System.Diagnostics;
 using ConsoleApplication.Functions.Matrix;
+using ConsoleApplication.Functions.TypingGame;
 
 namespace ConsoleApplication
 {       
@@ -16,14 +17,17 @@ namespace ConsoleApplication
         public static void Main(string[] args)
         {
             ConsoleInit();
-            Task.Factory.StartNew(async() => await MainAsync(args), cts.Token).Wait();
+            TypingGame.Begin().Wait();
+            //Task.Factory.StartNew(async() => await MainAsync(args), cts.Token).Wait();
+            //GlobalResetEvent.WaitOne();
         }
 
         public static async Task MainAsync(string[] args) 
         {
             try{
                 int nb;
-                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: HttpChat \n\n 3: Randomizer \n\n 4: Matrix"); 
+                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: HttpChat \n\n");
+                C.WL("3: TypingGame \n\n 4: Matrix \n\n 5: Randomizer"); 
                 if(args.Length > 0){ U.ParseInt(args[0], out nb); Console.Clear(); }
                 else if( !U.ParseInt(C.Read(), out nb)) { await MainAsync(args); }
                 switch(nb){
@@ -31,17 +35,18 @@ namespace ConsoleApplication
                                 break;
                         case 2: LauncHttpChatServer();
                                 break;
-                        case 3: Randomizer.Randomize();
+                        case 3: TypingGame.Begin().Wait();
                                 break;
                         case 4: Matrix.start(cts.Token);
                                 break;
+                        case 5: Randomizer.Randomize();
+                                break;
                         default: SocketChat.Begin(cts.Token);
-                                 Console.Clear();
                                  break;
                 }
             }
             catch( Exception ){}
-            finally{ GlobalResetEvent.WaitOne();EndTasks(); }
+            finally{ EndTasks(); }
         }
 
         public static void LauncHttpChatServer()
@@ -69,7 +74,7 @@ namespace ConsoleApplication
                 string[] dots = new string[4]{".   ", "..  ", "... ", "...."};
                 string[] myNode = new string[10]{"⡇","⠇","⠏","⠛","⠹","⠸","⢸","⣰","⣤","⣆"};
                 string[] node = new string[6]{"⠧","⠏","⠛","⠹","⠼","⠶"};
-                string[] bars = new string[15]{"▏","▎","▍","▌","▋","▊","▉","█","▇","▆","▅","▄","▃","▂","▁"};
+                string[] bars = new string[13]{"▏","▎","▍","▌","▊","▉","█","▇","▆","▅","▃","▂","▁"};
                 string[] angles = new string[4]{"◣","◤","◥","◢"};
                 string[] moons = new string[4]{"◐","◓","◑","◒"};
                 string[] rectangles = new string[4]{"▙","▛","▜","▟"};

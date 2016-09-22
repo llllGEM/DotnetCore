@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +14,7 @@ namespace ConsoleApplication.Functions.Chat
     {
         public static TcpListener Listener;
 
-        public static bool StealthMode {get;set;} = false;
+        public static bool StealthMode { get; set; } = false;
 
         public static void Begin(CancellationToken ct) 
         {
@@ -119,19 +118,13 @@ namespace ConsoleApplication.Functions.Chat
             private async static Task ClientReceiveSendAsync(TcpClient sender)
             {
                 while(true){
-                    byte[] bytes = new byte[sender.SendBufferSize];
+                    byte[] bytes = new byte[!StealthMode ? sender.SendBufferSize : 3500];
                     await sender.GetStream().ReadAsync(bytes,0,bytes.Length);
-                    var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
+                    var message = Encoding.UTF8.GetString(bytes);
                     if(!StealthMode)
-                        foreach(var s in Regex.Split(message,"(\\0)+")){
-                            if(s == string.Empty) continue;
-                            else if(s == " ") continue;
-                            else if(Regex.Match(s, "(\\0)+").Success) continue;
-                            else {
-                                await SocketMessageHandler.ServerSide(sender, message);
-                                break;
-                        }}
-                    else await SocketMessageHandler.ServerSide(sender, message);
+                        await SocketMessageHandler.ServerSide(sender, message.Trim('\0'));
+                    else 
+                        await SocketMessageHandler.ServerSide(sender, message);
                 }
             }
 
@@ -143,9 +136,9 @@ namespace ConsoleApplication.Functions.Chat
                         if(ManageInput(serverUsername, out firstChar, server: true)){
                             var inputUser = firstChar+C.Read().Trim();
                             if(inputUser.ToLower().Contains("file")) 
-                                try{
-                                    await SocketFileHandler.Start(null);
-                                }catch(Exception){}
+                            try{
+                                await SocketFileHandler.Start(null);
+                            }catch(Exception){}
                             var message = serverUsername+inputUser;
                             C.Cursor(message.Length, Console.CursorTop-1); //don't show Enter pressed
                             await SocketMessageHandler.ServerSide(new TcpClient(), message, true);
@@ -222,7 +215,7 @@ namespace ConsoleApplication.Functions.Chat
                     C.Cursor(username.Length, Console.CursorTop);//hide tab pressed
                     s = SocketMessageHandler.AutoCompleteUsers(C.Key().Key, server); 
                     C.Write(s);} //AutoComplete
-                else s = k.KeyChar.ToString().ToLower();
+                else s = k.KeyChar.ToString();
                 return true;
             }
             else Thread.Sleep(200);
@@ -239,9 +232,9 @@ namespace ConsoleApplication.Functions.Chat
                     if(ManageInput(username, out firstPart)){
                         var inputUser = firstPart+C.Read().Trim();
                         if(inputUser.ToLower().Contains("file"))
-                            try{    
-                                await SocketFileHandler.Start(client);
-                            }catch(Exception){}
+                        try{    
+                            await SocketFileHandler.Start(client);
+                        }catch(Exception){}
                         var message = username+inputUser;
                         var b = Encoding.UTF8.GetBytes(message);
                         C.Cursor(message.Length, Console.CursorTop-1); //don't show Enter pressed
@@ -256,15 +249,13 @@ namespace ConsoleApplication.Functions.Chat
             return Task.Factory.StartNew(async ()=>
             {
                 while(true){
-                    byte[] bytes = new byte[client.SendBufferSize];
+                    byte[] bytes = new byte[!StealthMode ? client.SendBufferSize : 3500];
                     await client.GetStream().ReadAsync(bytes,0,bytes.Length);
-                    var message = Encoding.UTF8.GetString(bytes).Trim(new char[2]{'\\','0'});
-                    if(!StealthMode)
-                        foreach(var s in Regex.Split(message,"(\\0)+")){
-                            if(s == string.Empty) continue;
-                            else if(Regex.Match(s, "(\\0)+").Success) continue;
-                            else { SocketMessageHandler.ClientSide(message); break;}}
-                    else  SocketMessageHandler.ClientSide(message);
+                    var message = Encoding.UTF8.GetString(bytes);
+                    if(!StealthMode) 
+                        SocketMessageHandler.ClientSide(message.Trim('\0'));
+                    else  
+                        SocketMessageHandler.ClientSide(message);
                 }
             }, ct);
         }

@@ -34,8 +34,8 @@ namespace ConsoleApplication.Functions.Matrix
             _|  _|  _|  _|    _|    _|      _|_|      _|    _|_|    
             _|      _|  _|    _|    _|      _|        _|  _|    _|  
             _|      _|    _|_|_|      _|_|  _|        _|  _|    _|");
-
-            C.WL("Hit Any Key To Continue");
+            var intro = "The Matrix Has You...";
+            for(int i = 0; i < intro.Length ; i++){ C.Write(intro[i].ToString()); Thread.Sleep(30);}
             C.Key();
             Console.CursorVisible = false;
             
@@ -65,12 +65,10 @@ namespace ConsoleApplication.Functions.Matrix
                 C.WriteChar(ProcessChar());
 
                 Console.ForegroundColor = ConsoleColor.DarkGreen;
-                int temp = y[x] - 2;
-                C.Cursor(x, inScreenYPosition(temp, height));
+                C.Cursor(x, inScreenYPosition(y[x] - 2, height));
                 C.WriteChar(ProcessChar());
 
-                int temp1 = y[x] - 20;
-                C.Cursor(x, inScreenYPosition(temp1, height));
+                C.Cursor(x, inScreenYPosition(y[x] - 20, height));
                 C.WriteChar(' ');
 
                 // increment y

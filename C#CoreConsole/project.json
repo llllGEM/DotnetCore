@@ -13,7 +13,8 @@
     "Microsoft.EntityFrameworkCore.Design": {
       "version": "1.0.0-preview2-final",
       "type": "build"
-    }
+    },
+    "MailKit": "1.6.0"
   },
   "frameworks": {
     "netcoreapp1.0": {

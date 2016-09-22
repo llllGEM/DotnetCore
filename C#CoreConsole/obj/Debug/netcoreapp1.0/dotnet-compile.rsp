@@ -14,6 +14,7 @@
 --version:1.0.0.0
 --informational-version:1.0.0
 --target-framework:.NETCoreApp,Version=v1.0
+--reference:/Users/MacnDevin/.nuget/packages/mailkit/1.6.0/lib/netstandard1.3/MailKit.dll
 --reference:/Users/MacnDevin/.nuget/packages/microsoft.aspnetcore.hosting.abstractions/1.0.0/lib/netstandard1.3/Microsoft.AspNetCore.Hosting.Abstractions.dll
 --reference:/Users/MacnDevin/.nuget/packages/microsoft.aspnetcore.hosting.server.abstractions/1.0.0/lib/netstandard1.3/Microsoft.AspNetCore.Hosting.Server.Abstractions.dll
 --reference:/Users/MacnDevin/.nuget/packages/microsoft.aspnetcore.http.abstractions/1.0.0/lib/netstandard1.3/Microsoft.AspNetCore.Http.Abstractions.dll
@@ -39,7 +40,9 @@
 --reference:/Users/MacnDevin/.nuget/packages/microsoft.extensions.primitives/1.0.0/lib/netstandard1.0/Microsoft.Extensions.Primitives.dll
 --reference:/Users/MacnDevin/.nuget/packages/microsoft.visualbasic/10.0.1/ref/netstandard1.1/Microsoft.VisualBasic.dll
 --reference:/Users/MacnDevin/.nuget/packages/microsoft.win32.primitives/4.0.1/ref/netstandard1.3/Microsoft.Win32.Primitives.dll
+--reference:/Users/MacnDevin/.nuget/packages/mimekit/1.6.0/lib/netstandard1.3/MimeKit.dll
 --reference:/Users/MacnDevin/.nuget/packages/newtonsoft.json/9.0.1/lib/netstandard1.0/Newtonsoft.Json.dll
+--reference:/Users/MacnDevin/.nuget/packages/portable.bouncycastle/1.8.1.1/lib/netstandard1.3/crypto.dll
 --reference:/Users/MacnDevin/.nuget/packages/remotion.linq/2.1.1/lib/netstandard1.0/Remotion.Linq.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.appcontext/4.1.0/ref/netstandard1.6/System.AppContext.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.buffers/4.0.0/lib/netstandard1.1/System.Buffers.dll
@@ -75,6 +78,7 @@
 --reference:/Users/MacnDevin/.nuget/packages/system.linq.queryable/4.0.1/ref/netstandard1.0/System.Linq.Queryable.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.net.http/4.1.0/ref/netstandard1.3/System.Net.Http.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.net.nameresolution/4.0.0/ref/netstandard1.3/System.Net.NameResolution.dll
+--reference:/Users/MacnDevin/.nuget/packages/system.net.networkinformation/4.1.0/ref/netstandard1.3/System.Net.NetworkInformation.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.net.primitives/4.0.11/ref/netstandard1.3/System.Net.Primitives.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.net.requests/4.0.11/ref/netstandard1.3/System.Net.Requests.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.net.security/4.0.0/ref/netstandard1.3/System.Net.Security.dll
@@ -105,6 +109,7 @@
 --reference:/Users/MacnDevin/.nuget/packages/system.security.cryptography.x509certificates/4.1.0/ref/netstandard1.4/System.Security.Cryptography.X509Certificates.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.security.principal/4.0.1/ref/netstandard1.0/System.Security.Principal.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.text.encoding/4.0.11/ref/netstandard1.3/System.Text.Encoding.dll
+--reference:/Users/MacnDevin/.nuget/packages/system.text.encoding.codepages/4.0.1/ref/netstandard1.3/System.Text.Encoding.CodePages.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.text.encoding.extensions/4.0.11/ref/netstandard1.3/System.Text.Encoding.Extensions.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.text.encodings.web/4.0.0/lib/netstandard1.0/System.Text.Encodings.Web.dll
 --reference:/Users/MacnDevin/.nuget/packages/system.text.regularexpressions/4.1.0/ref/netstandard1.6/System.Text.RegularExpressions.dll
@@ -123,6 +128,7 @@
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Data/DbContext.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Data/Session.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Data/Vote.cs
+/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/Display.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/SocketChat.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/SocketFileHandler.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Chat/SocketMessageHandler.cs
@@ -130,6 +136,8 @@
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Matrix/Matrix.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Randomizer/Randomizer.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/Randomizer/VoteHandler.cs
+/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/TypingGame/Display.cs
+/Users/MacnDevin/Documents/myGit/C#CoreConsole/Functions/TypingGame/TypingGame.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Migrations/20160905015745_clean.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Migrations/20160905015745_clean.Designer.cs
 /Users/MacnDevin/Documents/myGit/C#CoreConsole/Migrations/EFCoreContextModelSnapshot.cs
