@@ -17,8 +17,7 @@ namespace ConsoleApplication
         public static void Main(string[] args)
         {
             ConsoleInit();
-            TypingGame.Begin().Wait();
-            //Task.Factory.StartNew(async() => await MainAsync(args), cts.Token).Wait();
+            Task.Factory.StartNew(async() => await MainAsync(args), cts.Token).Wait();
             //GlobalResetEvent.WaitOne();
         }
 
@@ -26,10 +25,11 @@ namespace ConsoleApplication
         {
             try{
                 int nb;
-                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: HttpChat \n\n");
-                C.WL("3: TypingGame \n\n 4: Matrix \n\n 5: Randomizer"); 
+                C.WL("Choose program:\n\n 1: SocketChat \n\n 2: HttpChat \n");
+                C.WL(" 3: TypingGame \n\n 4: Matrix \n\n 5: Randomizer"); 
+                restart:
                 if(args.Length > 0){ U.ParseInt(args[0], out nb); Console.Clear(); }
-                else if( !U.ParseInt(C.Read(), out nb)) { await MainAsync(args); }
+                else if( !U.ParseInt(C.Read(), out nb)) { goto restart; }
                 switch(nb){
                         case 1: SocketChat.Begin(cts.Token);
                                 break;
@@ -41,12 +41,11 @@ namespace ConsoleApplication
                                 break;
                         case 5: Randomizer.Randomize();
                                 break;
-                        default: SocketChat.Begin(cts.Token);
-                                 break;
+                        default: goto restart;
                 }
             }
-            catch( Exception ){}
-            finally{ EndTasks(); }
+            catch( Exception ){ EndTasks(); }
+            finally{ await MainAsync(args); }
         }
 
         public static void LauncHttpChatServer()
@@ -80,7 +79,6 @@ namespace ConsoleApplication
                 string[] rectangles = new string[4]{"▙","▛","▜","▟"};
                 SetConsoleTitle(myNode);
             }, cts.Token);
-
             Console.CancelKeyPress += (sender, e) => {
                 //e.Cancel = true; 
                 SocketChat.Listener?.Stop(); // stop listener if socketChat launched in case of control + C
@@ -95,9 +93,9 @@ namespace ConsoleApplication
             string title = "";
             while (true){
                 for(int i = 0; i< pattern.Length; i++){
-                        title = "Running "+pattern[i];
-                        Console.Title = title;
-                        Thread.Sleep(50);
+                    title = "Running "+pattern[i];
+                    Console.Title = title;
+                    Thread.Sleep(50);
                 }
             }
         }

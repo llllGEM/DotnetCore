@@ -68,7 +68,7 @@ namespace ConsoleApplication.Functions.Matrix
                 C.Cursor(x, inScreenYPosition(y[x] - 2, height));
                 C.WriteChar(ProcessChar());
 
-                C.Cursor(x, inScreenYPosition(y[x] - 20, height));
+                C.Cursor(x, inScreenYPosition(y[x] - 18, height));
                 C.WriteChar(' ');
 
                 // increment y

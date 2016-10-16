@@ -25,11 +25,13 @@ namespace ConsoleApplication.Functions.TypingGame
         {
             var scores = TypingGame.Scores;
             if(scores.Count == 0) return;
+            var top = Console.CursorTop;
             C.WL(" ");
             foreach(var s in scores)
                 C.WL(scores.IndexOf(s).ToString().PadRight(5)+" "+s);
             var avg = TimeSpan.FromSeconds(scores.Average(s => s.Seconds));
             C.WL($"Average: {avg}");
+            C.Cursor(Console.CursorLeft, top);
         }
     }
 }

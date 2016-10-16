@@ -25,8 +25,9 @@ namespace ConsoleApplication.Functions.TypingGame
             {
                 string randomWord = await Client.GetStringAsync("http://randomword.setgetgo.com/get.php"); 
                 restart:
-                Display.ResetCursor(randomWord);
                 Stopwatch watch = Stopwatch.StartNew();
+                retry:
+                Display.ResetCursor(randomWord);
                 foreach(var c in randomWord)
                 {
                     string key = Console.ReadKey(true).Key.ToString().ToLower();
@@ -34,7 +35,7 @@ namespace ConsoleApplication.Functions.TypingGame
                     if(key == c.ToString().ToLower())
                         Display.ValidateChar(c.ToString());
                     else
-                        goto restart;
+                        goto retry;
                 }
                 watch.Stop();
                 Scores.Add(watch.Elapsed);
