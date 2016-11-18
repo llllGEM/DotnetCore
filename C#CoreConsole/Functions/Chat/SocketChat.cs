@@ -12,7 +12,7 @@ namespace ConsoleApplication.Functions.Chat
 {
     public static class SocketChat
     {
-        public static TcpListener Listener;
+        public static TcpListener Listener { get; set; }
 
         public static bool StealthMode { get; set; } = false;
 
@@ -55,13 +55,13 @@ namespace ConsoleApplication.Functions.Chat
 
         public static class Public
         {
-            public static IPAddress IPServer {get; set;} = IPAddress.Any;
+            public static IPAddress IPServer { get; set; } = IPAddress.Any;
 
-            public static bool SeeEverything {get;set;} = false;
+            public static bool SeeEverything { get; set; } = false;
 
-            public static ObservableCollection<SocketUser> Users {get; set;} = new ObservableCollection<SocketUser>();
+            public static ObservableCollection<SocketUser> Users { get; set; } = new ObservableCollection<SocketUser>();
 
-            public static List<string> History {get;set;} = new List<string>();
+            public static List<string> History { get; set; } = new List<string>();
 
             public async static Task ServerStartAsync(CancellationToken ct)
             {
@@ -75,14 +75,16 @@ namespace ConsoleApplication.Functions.Chat
                     var t = AcceptClientsAsync(Listener);
                     var t1 = ClientBroadCastAsync();
                     var t2 = ServerBroadCastAsync(Display.GenerateUsername(), ct); 
-                    Task.WaitAll(new []{t,t1});// t2 Parallel to avoid blocking
+                    Task.WaitAll(new []{t,t1});// t2 Parallel to avoid blocking server processes
                 }catch(Exception e){ C.WL(e.Message); StopRestart(); return;}
             }
 
             public async static Task ClientConnectAsync(CancellationToken ct, int? port = null)
             {
                 await U.CheckEnvironementAsync();
-                Display.AskServerIPAddress(); Display.AskStealthMode();
+                IPAddress ip;
+                Display.AskServerIPAddress(out ip); Display.AskStealthMode();
+                Public.IPServer = ip;
                 TcpClient Tcp;
                 try{
                     Tcp = new TcpClient(AddressFamily.InterNetwork);
@@ -111,14 +113,15 @@ namespace ConsoleApplication.Functions.Chat
             {
                 Users.CollectionChanged += async (s,e) => {
                     if(Users.LastOrDefault().Client.Connected)
-                    await ClientReceiveSendAsync(Users.LastOrDefault().Client);
+                    try{await ClientReceiveSendAsync(Users.LastOrDefault().Client);}
+                    catch (System.Exception){return;}
                 };
             }
 
             private async static Task ClientReceiveSendAsync(TcpClient sender)
             {
                 while(true){
-                    byte[] bytes = new byte[!StealthMode ? sender.SendBufferSize : 3500];
+                        byte[] bytes = new byte[!StealthMode ? sender.SendBufferSize : 3500];
                     await sender.GetStream().ReadAsync(bytes,0,bytes.Length);
                     var message = Encoding.UTF8.GetString(bytes);
                     if(!StealthMode)
@@ -153,7 +156,7 @@ namespace ConsoleApplication.Functions.Chat
                 var b = Encoding.UTF8.GetBytes(message);
                 foreach(var user in Users)
                     if(user.Client.Connected)
-                        user.Client.GetStream()?.WriteAsync(b, 0, b.Length);   
+                        user.Client.GetStream().WriteAsync(b, 0, b.Length);   
             }
 
             public static List<SocketUser> GetUsersFromName(List<string> names)

@@ -87,7 +87,7 @@ namespace ConsoleApplication.Functions.Matrix
                     if(ChangePatternEvent != null)
                         ChangePatternEvent();
                 if (key == ConsoleKey.F5) Console.Clear();
-                if (key== ConsoleKey.F8) C.Key();
+                if (key == ConsoleKey.F8) C.Key();
             }
         }
 

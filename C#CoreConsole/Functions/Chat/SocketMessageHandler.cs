@@ -186,7 +186,7 @@ namespace ConsoleApplication.Functions.Chat
         private static void SendConnectedUsers(TcpClient requester, bool server)
         {
             var message = "users ";
-            foreach (var user in SocketChat.Public.Users?.Where(u => u.Client != requester)) 
+            foreach (var user in SocketChat.Public.Users.Where(u => u.Client != requester)) 
                 message += user.Username+"\n";
             var target = SocketChat.Public.Users.Where(u => u.Client == requester).FirstOrDefault();
             if(target != null)
@@ -286,10 +286,10 @@ namespace ConsoleApplication.Functions.Chat
             for(int i = 0; i<=10; i++)
             {
                 Console.Beep(37+i, 100);
-                Console.WindowWidth += 5;
-                Console.WindowHeight += 2;
-                Console.WindowWidth -= 5;
-                Console.WindowHeight -= 2;
+                Console.WindowLeft += 5;
+                Console.WindowTop += 2;
+                Console.WindowLeft -= 5;
+                Console.WindowTop -= 2;
             }
             var tab = Regex.Split(message, UserRegex).ToList();
             message ="";

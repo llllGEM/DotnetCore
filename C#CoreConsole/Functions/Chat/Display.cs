@@ -114,12 +114,13 @@ namespace ConsoleApplication.Functions.Chat
             || key == ConsoleKey.Enter) SocketChat.StealthMode = true;
         }
 
-        public static void AskServerIPAddress()
+        public static IPAddress AskServerIPAddress(out IPAddress IpServer)
         {
             C.WL("Enter Server Ip Address...Or Press Enter To Discover \t\t");
             var ip = C.Read();
             if(ip != string.Empty)
-                SocketChat.Public.IPServer = IPAddress.Parse(ip);
+                return IpServer = IPAddress.Parse(ip);
+            else return IpServer = IPAddress.Any;
         }
 
     }
