@@ -286,10 +286,10 @@ namespace ConsoleApplication.Functions.Chat
             for(int i = 0; i<=10; i++)
             {
                 Console.Beep(37+i, 100);
-                Console.WindowLeft += 5;
-                Console.WindowTop += 2;
-                Console.WindowLeft -= 5;
-                Console.WindowTop -= 2;
+                Console.WindowWidth += 5;
+                Console.WindowHeight += 2;
+                Console.WindowWidth -= 5;
+                Console.WindowHeight -= 2;
             }
             var tab = Regex.Split(message, UserRegex).ToList();
             message ="";
