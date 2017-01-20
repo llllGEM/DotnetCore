@@ -55,7 +55,7 @@ namespace ConsoleApplication.Functions.Chat
 
         public static class Public
         {
-            public static IPAddress IPServer { get; set; } = IPAddress.Any;
+            public static IPAddress IPServer { get; set; }
 
             public static bool SeeEverything { get; set; } = false;
 

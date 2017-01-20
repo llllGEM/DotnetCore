@@ -8,7 +8,6 @@ using ConsoleApplication.Functions.Chat;
 
 namespace ConsoleApplication
 {
-
     public delegate bool Parse<T>(string t, out T i);
     public delegate void Writer(string s);
     public delegate void CharWriter(char c);
@@ -86,6 +85,7 @@ namespace ConsoleApplication
     public static class C //console alias
     {
         public static Writer Display = (s) => { Cursor(0, Console.CursorTop); Write(s); Cursor(50, Console.CursorTop); };
+        public static Writer Inline = (s) => { Cursor(0, Console.CursorTop); Write(s); Cursor(0, Console.CursorTop); };
         public static Writer WL = Console.WriteLine;
         public static Writer Write = Console.Write;
         public static CharWriter WriteChar = Console.Write;

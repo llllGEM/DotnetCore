@@ -37,9 +37,13 @@ namespace ConsoleApplication
                                 break;
                         case 3: TypingGame.Begin().Wait();
                                 break;
-                        case 4: Matrix.start(cts.Token);
+                        case 4: Matrix.Start(cts.Token);
                                 break;
                         case 5: Randomizer.Randomize();
+                                break;
+                        case 6: Dos.TcpFloodAttack();
+                                break;
+                        case 7: Dos.UdpFloodAttack();
                                 break;
                         default: goto restart;
                 }

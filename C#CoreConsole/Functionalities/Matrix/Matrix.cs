@@ -23,7 +23,7 @@ namespace ConsoleApplication.Functions.Matrix
             }
         }
         
-        public static void start(CancellationToken ct)
+        public static void Start(CancellationToken ct)
         {
             U.CheckEnvironementAsync().Wait();
             Console.ForegroundColor = ConsoleColor.DarkGreen;
