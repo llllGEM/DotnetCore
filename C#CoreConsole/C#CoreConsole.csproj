@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <DebugType>portable</DebugType>
+    <AssemblyName>C#CoreConsole</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <PackageId>C#CoreConsole</PackageId>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.IO" Version="4.3.0"/>
+    <PackageReference Include="System.Threading" Version="4.3.0"/>
+    <PackageReference Include="System.Net.Sockets" Version="4.3.0"/>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="1.0.3"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="1.0.3">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.0"/>
+  </ItemGroup>
+</Project>

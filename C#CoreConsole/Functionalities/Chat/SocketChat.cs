@@ -221,7 +221,7 @@ namespace ConsoleApplication.Functions.Chat
                 else s = k.KeyChar.ToString();
                 return true;
             }
-            else Thread.Sleep(200);
+            else Thread.Sleep(100);
             s="";
             return false;
         }
